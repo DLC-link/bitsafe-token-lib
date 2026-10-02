@@ -32,12 +32,11 @@ to its own registrar party.
 cargo fmt -- --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test
-./scripts/check-deps.sh
 ```
 
-The last command enforces the dependency rule: `tokens` may use `flows` and
-`kits`, `flows` may use `kits`, and nothing imports upward. Install the tool
-it runs with `cargo install --locked cargo-modules --version 0.27.0`.
+`tests/dependency_rule.rs` enforces the dependency rule: `tokens` may use
+`flows` and `kits`, `flows` may use `kits`, and nothing imports upward. It
+scans every source line under `src/kits` and `src/flows` for an upward path.
 
 ## License
 
