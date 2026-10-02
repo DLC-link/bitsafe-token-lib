@@ -4,6 +4,9 @@
 //! re-exported here under the same names `cbtc-lib` used. Each asset's own
 //! flows live under `tokens`.
 
+mod network;
+pub use network::{Network, ParseNetworkError};
+
 /// The parameter types the Token Standard operations take.
 ///
 /// `v2::Transfer` cannot sit at the crate root, because `transfer` at the
