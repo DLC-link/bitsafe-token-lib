@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+  cargo:
+    name: Format, Clippy & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # rust-toolchain.toml pins the channel; rustup reads it on first use.
+      - name: Install toolchain
+        run: rustup show
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo fmt
+        run: cargo fmt -- --check
+      - name: cargo clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+      # Includes tests/dependency_rule.rs, which enforces the layering rule.
+      - name: cargo test
+        run: cargo test
+
+  cargo-deny:
+    name: Cargo Deny
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # Only `advisories` until deny.toml carries real bans, licenses and
+      # sources policy. canton-lib is public, so no SSH key is needed.
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check advisories

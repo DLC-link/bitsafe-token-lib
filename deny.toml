@@ -1,0 +1,11 @@
+# cargo-deny is the only RustSec advisories gate, so this is the only
+# advisory-exception list this repo has. cargo-deny resolves the dependency
+# graph with features applied, so it flags only crates this crate compiles.
+#
+# Every ignored RUSTSEC ID carries a `reason` that names the crate that
+# brings it in, why no fix exists, and what change would make the ignore
+# unsafe. Never ignore a finding that is reachable only through a disabled
+# feature: cargo-deny already skips it.
+
+[advisories]
+ignore = []
