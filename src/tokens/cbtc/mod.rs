@@ -57,6 +57,22 @@ pub fn client_config(
     }
 }
 
+impl crate::flows::canton_bridge_v1::models::WithdrawRequest<Cbtc> {
+    /// The Bitcoin transaction id of the payout, which the registrar sets
+    /// when it creates the request.
+    ///
+    /// # Errors
+    ///
+    /// Fails when the request carries no `btcTxId`, as `cbtc-lib` did.
+    #[allow(dead_code)]
+    pub fn btc_tx_id(&self) -> Result<&str, String> {
+        self.create_argument
+            .get("btcTxId")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| "Missing 'btcTxId' field".to_string())
+    }
+}
+
 impl CantonBridgeV1 for Cbtc {
     const TICKER: &'static str = "CBTC";
     const API_PATH: &'static str = "cbtc";
