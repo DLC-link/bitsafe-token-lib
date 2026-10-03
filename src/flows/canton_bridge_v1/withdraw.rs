@@ -14,7 +14,7 @@ use crate::{
     },
     kits::{
         bitsafe_api::{self, AccountContractRuleSet, TokenStandardContracts},
-        canton::{self, Exercise, check_limits},
+        canton::{self, Exercise},
     },
 };
 
@@ -176,7 +176,7 @@ pub(crate) fn check_withdraw<A: CantonBridgeV1>(
     if params.amount <= DamlDecimal::ZERO {
         return Err("Amount to withdraw must be greater than 0".to_string());
     }
-    check_limits("Withdraw", params.amount, &account.limits)?;
+    account.check_amount(params.amount)?;
     if params.holdings.is_empty() {
         return Err("No holdings to withdraw from".to_string());
     }

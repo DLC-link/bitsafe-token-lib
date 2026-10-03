@@ -32,7 +32,9 @@ macro_rules! bind_canton_bridge_v1 {
                 pub use $crate::kits::bitsafe_api::ContractInfo;
                 pub use $crate::kits::canton::Limits;
 
-                /// A deposit account of this asset.
+                /// A deposit account of this asset. `account_id()` returns the id that the
+                /// attestors key on, and `check_amount(amount)` tests an amount against the
+                /// account's limits.
                 pub type DepositAccount = f::models::DepositAccount<$asset>;
                 /// This asset's account rules contracts.
                 pub type AccountContractRuleSet =
@@ -81,7 +83,8 @@ macro_rules! bind_canton_bridge_v1 {
                 pub use f::withdraw::{ListWithdrawAccountsParams, ListWithdrawRequestsParams};
                 pub use $crate::kits::canton::{ListHoldingsParams, list_holdings};
 
-                /// A withdraw account of this asset.
+                /// A withdraw account of this asset. `check_amount(amount)` tests an amount
+                /// against the account's limits.
                 pub type WithdrawAccount = f::models::WithdrawAccount<$asset>;
                 /// A withdraw request of this asset.
                 pub type WithdrawRequest = f::models::WithdrawRequest<$asset>;

@@ -10,7 +10,9 @@ use serde_json::Value;
 use crate::{
     DamlDecimal,
     flows::canton_bridge_v1::CantonBridgeV1,
-    kits::canton::{Limits, create_args, optional_limits, optional_str, required_str},
+    kits::canton::{
+        Limits, check_limits, create_args, optional_limits, optional_str, required_str,
+    },
 };
 
 /// A deposit account. `account_id()` is the id the attestors key on.
@@ -37,6 +39,19 @@ impl<A> DepositAccount<A> {
     /// id. A deposit made to any other id is never credited.
     pub fn account_id(&self) -> &str {
         self.id.as_deref().unwrap_or(&self.contract_id)
+    }
+
+    /// Checks an amount against the account's limits, so a caller can refuse
+    /// a deposit before it sends one. An account without limits accepts any
+    /// amount. This method does not refuse zero or a negative amount; the
+    /// caller checks that the amount is above zero.
+    ///
+    /// # Errors
+    ///
+    /// Fails with the bound that the amount breaks, for example
+    /// `Deposit amount 0.0005 is below minimum 0.001`.
+    pub fn check_amount(&self, amount: DamlDecimal) -> Result<(), String> {
+        check_limits("Deposit", amount, &self.limits)
     }
 }
 
@@ -121,6 +136,21 @@ impl<A: CantonBridgeV1> WithdrawAccount<A> {
     }
 }
 
+impl<A> WithdrawAccount<A> {
+    /// Checks an amount against the account's limits, so a caller can refuse
+    /// a burn before it submits one. An account without limits accepts any
+    /// amount. This method does not refuse zero or a negative amount;
+    /// `submit_withdraw` does.
+    ///
+    /// # Errors
+    ///
+    /// Fails with the bound that the amount breaks, for example
+    /// `Withdraw amount 2 exceeds maximum 1`.
+    pub fn check_amount(&self, amount: DamlDecimal) -> Result<(), String> {
+        check_limits("Withdraw", amount, &self.limits)
+    }
+}
+
 /// A payout record the registrar creates after a burn.
 #[derive(Debug, Clone)]
 pub struct WithdrawRequest<A: CantonBridgeV1> {
@@ -175,6 +205,10 @@ mod tests {
     const DA: &str = "f240:CBTC.DepositAccount:CBTCDepositAccount";
     const WA: &str = "f240:CBTC.WithdrawAccount:CBTCWithdrawAccount";
     const WR: &str = "f240:CBTC.WithdrawRequest:CBTCWithdrawRequest";
+
+    fn d(s: &str) -> DamlDecimal {
+        DamlDecimal::parse(s).unwrap()
+    }
 
     fn deposit_args(id: Value) -> Value {
         json!({
@@ -299,5 +333,48 @@ mod tests {
             WithdrawRequest::<Cbtc>::from_active_contract(&active_contract_of(WR, "00wr", args))
                 .unwrap_err();
         assert_eq!(error, "Missing 'btcTxId' field");
+    }
+
+    #[test]
+    fn check_amount_tests_a_deposit_against_the_account_limits() {
+        let account = DepositAccount::<Cbtc>::from_active_contract(&active_contract_of(
+            DA,
+            "00da",
+            deposit_args(json!(null)),
+        ))
+        .unwrap();
+        assert!(account.check_amount(d("0.001")).is_ok());
+        assert_eq!(
+            account.check_amount(d("0.0005")).unwrap_err(),
+            "Deposit amount 0.0005 is below minimum 0.001"
+        );
+    }
+
+    #[test]
+    fn check_amount_tests_a_withdraw_against_the_account_limits() {
+        let args = json!({
+            "owner": "alice", "operator": "op", "registrar": "r", "destinationBtcAddress": "bcrt1qexample00000",
+            "pendingBalance": "0", "limits": {"minAmount": null, "maxAmount": "1"},
+        });
+        let account =
+            WithdrawAccount::<Cbtc>::from_active_contract(&active_contract_of(WA, "00wa", args))
+                .unwrap();
+        assert!(account.check_amount(d("1")).is_ok());
+        assert_eq!(
+            account.check_amount(d("2")).unwrap_err(),
+            "Withdraw amount 2 exceeds maximum 1"
+        );
+    }
+
+    #[test]
+    fn check_amount_accepts_any_amount_on_an_account_without_limits() {
+        let args = json!({
+            "owner": "alice", "operator": "op", "registrar": "r", "destinationBtcAddress": "bcrt1qexample00000",
+            "pendingBalance": "0", "limits": null,
+        });
+        let account =
+            WithdrawAccount::<Cbtc>::from_active_contract(&active_contract_of(WA, "00wa", args))
+                .unwrap();
+        assert!(account.check_amount(d("1000000")).is_ok());
     }
 }
