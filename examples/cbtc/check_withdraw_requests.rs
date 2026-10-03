@@ -110,7 +110,7 @@ async fn main() -> Result<(), String> {
                             "  {} BTC -> {} (tx: {})",
                             request.amount,
                             &request.destination_address,
-                            request.btc_tx_id().unwrap_or("-")
+                            request.btc_tx_id()
                         );
                     }
                 }

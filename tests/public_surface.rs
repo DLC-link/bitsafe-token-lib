@@ -31,8 +31,8 @@ fn the_cbtc_api_compiles_at_its_public_paths() {
         redeem::{
             CreateWithdrawAccountParams, ListHoldingsParams, ListWithdrawAccountsParams,
             ListWithdrawRequestsParams, SubmitWithdrawParams, WithdrawAccount, WithdrawRequest,
-            create_withdraw_account, find_withdraw_account, list_holdings, list_withdraw_accounts,
-            list_withdraw_requests, submit_withdraw,
+            WithdrawRequestDetails, create_withdraw_account, find_withdraw_account, list_holdings,
+            list_withdraw_accounts, list_withdraw_requests, submit_withdraw,
         },
     };
     let _ = (
@@ -82,4 +82,5 @@ fn the_cbtc_api_compiles_at_its_public_paths() {
         ListWithdrawRequestsParams,
     )> = None;
     let _: Option<SubmitWithdrawParams<'static>> = None;
+    let _: Option<WithdrawRequestDetails> = None;
 }

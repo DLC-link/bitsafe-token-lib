@@ -8,6 +8,7 @@
 //! share it; an asset with other choices writes its own flows on the kits.
 
 use ledger::models::JsSubmitAndWaitForTransactionResponse;
+use serde_json::{Map, Value};
 
 use crate::kits::canton;
 
@@ -48,6 +49,17 @@ pub trait CantonBridgeV1 {
     /// Checks a destination address before submission, so a bad address
     /// fails locally with a clear message.
     fn validate_destination(address: &str) -> Result<(), String>;
+
+    /// The fields of a withdraw request that only this asset has. `()` when
+    /// the asset has none.
+    type WithdrawRequestDetails: std::fmt::Debug + Clone;
+
+    /// Reads this asset's own withdraw request fields from the create
+    /// argument. A field that the Daml template requires fails the parse
+    /// when it is absent.
+    fn parse_withdraw_request_details(
+        args: &Map<String, Value>,
+    ) -> Result<Self::WithdrawRequestDetails, String>;
 }
 
 /// Fails when a model's registrar is not the registrar of the network the

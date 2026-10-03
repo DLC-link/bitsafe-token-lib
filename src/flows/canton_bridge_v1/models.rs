@@ -1,7 +1,6 @@
 //! The account and request models of the family. Each model carries its
 //! asset as a type parameter, so a CBTC account cannot reach a BETH function.
-//! Each keeps its raw create argument, the extension point for a field that
-//! only one asset has.
+//! Each keeps its raw create argument for a field that the typed model does not read.
 
 use std::marker::PhantomData;
 
@@ -124,7 +123,7 @@ impl<A: CantonBridgeV1> WithdrawAccount<A> {
 
 /// A payout record the registrar creates after a burn.
 #[derive(Debug, Clone)]
-pub struct WithdrawRequest<A> {
+pub struct WithdrawRequest<A: CantonBridgeV1> {
     pub contract_id: String,
     pub template_id: String,
     pub owner: String,
@@ -133,7 +132,10 @@ pub struct WithdrawRequest<A> {
     pub destination_address: String,
     /// The withdraw account the request came from, when the ledger records it.
     pub source_account_id: Option<String>,
-    /// The raw create argument, for a field only one asset has.
+    /// The fields that only this asset has. A field that the Daml template
+    /// requires is required here too.
+    pub details: A::WithdrawRequestDetails,
+    /// The raw create argument, for a field that the typed model does not read.
     pub create_argument: Value,
     _asset: PhantomData<A>,
 }
@@ -147,6 +149,7 @@ impl<A: CantonBridgeV1> WithdrawRequest<A> {
             .map_err(|e| format!("Invalid 'amount' field: {}", e))?;
         let destination_address = required_str(args, A::DESTINATION_ADDRESS_FIELD)?;
         let source_account_id = optional_str(args, "sourceAccountId");
+        let details = A::parse_withdraw_request_details(args)?;
         Ok(Self {
             contract_id: contract.created_event.contract_id.clone(),
             template_id: contract.created_event.template_id.clone(),
@@ -155,6 +158,7 @@ impl<A: CantonBridgeV1> WithdrawRequest<A> {
             amount,
             destination_address,
             source_account_id,
+            details,
             create_argument: Value::Object(args.clone()),
             _asset: PhantomData,
         })
@@ -276,19 +280,24 @@ mod tests {
     }
 
     #[test]
-    fn btc_tx_id_reads_the_cbtc_field_and_fails_by_name_without_it() {
+    fn a_cbtc_withdraw_request_carries_its_btc_tx_id() {
         let request = WithdrawRequest::<Cbtc>::from_active_contract(&active_contract_of(
             WR,
             "00wr",
             request_args(),
         ))
         .unwrap();
-        assert_eq!(request.btc_tx_id().unwrap(), "abc123");
+        assert_eq!(request.details.btc_tx_id, "abc123");
+        assert_eq!(request.btc_tx_id(), "abc123");
+    }
+
+    #[test]
+    fn a_cbtc_withdraw_request_without_btc_tx_id_does_not_parse() {
         let mut args = request_args();
         args.as_object_mut().unwrap().remove("btcTxId");
-        let without =
+        let error =
             WithdrawRequest::<Cbtc>::from_active_contract(&active_contract_of(WR, "00wr", args))
-                .unwrap();
-        assert_eq!(without.btc_tx_id().unwrap_err(), "Missing 'btcTxId' field");
+                .unwrap_err();
+        assert_eq!(error, "Missing 'btcTxId' field");
     }
 }

@@ -1,8 +1,10 @@
 //! CBTC: Bitcoin bridged to Canton. This module is the whole CBTC API.
 
+use serde_json::{Map, Value};
+
 use crate::{
     AssetInfo, InstrumentId, KeycloakConfig, Network, TokenClientConfig, TokenStandardVersion,
-    flows::canton_bridge_v1::CantonBridgeV1,
+    flows::canton_bridge_v1::CantonBridgeV1, kits::canton::required_str,
 };
 
 /// CBTC as a type. It has no methods: it carries the asset in a model's
@@ -60,15 +62,8 @@ pub fn client_config(
 impl redeem::WithdrawRequest {
     /// The Bitcoin transaction id of the payout, which the registrar sets
     /// when it creates the request.
-    ///
-    /// # Errors
-    ///
-    /// Fails when the request carries no `btcTxId`, as `cbtc-lib` did.
-    pub fn btc_tx_id(&self) -> Result<&str, String> {
-        self.create_argument
-            .get("btcTxId")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| "Missing 'btcTxId' field".to_string())
+    pub fn btc_tx_id(&self) -> &str {
+        &self.details.btc_tx_id
     }
 }
 
@@ -104,6 +99,18 @@ impl CantonBridgeV1 for Cbtc {
             ));
         }
         Ok(())
+    }
+
+    type WithdrawRequestDetails = redeem::WithdrawRequestDetails;
+
+    /// `CBTCWithdrawRequest` declares `btcTxId: Text`, so a request without
+    /// it fails, as it did in `cbtc-lib`.
+    fn parse_withdraw_request_details(
+        args: &Map<String, Value>,
+    ) -> Result<Self::WithdrawRequestDetails, String> {
+        Ok(redeem::WithdrawRequestDetails {
+            btc_tx_id: required_str(args, "btcTxId")?,
+        })
     }
 }
 
@@ -180,6 +187,13 @@ pub mod mint {
 /// Redeeming CBTC: withdraw accounts, the burn and the payout records.
 pub mod redeem {
     pub use super::family::redeem::*;
+
+    /// The CBTC-only fields of a withdraw request.
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    pub struct WithdrawRequestDetails {
+        /// The Bitcoin transaction id of the payout.
+        pub btc_tx_id: String,
+    }
 }
 
 #[cfg(test)]
