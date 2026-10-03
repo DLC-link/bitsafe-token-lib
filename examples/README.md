@@ -62,14 +62,6 @@ The mint and redeem examples require a Minter credential issued by the CBTC regi
 These also require `ENVIRONMENT` in your `.env`, which supplies the BitSafe
 API URL for the network.
 
-### Integration Test
-
-The end-to-end flow runs as a devnet test, not as an example:
-
-```bash
-cargo test --test devnet_integration -- --ignored
-```
-
 ### Credentials
 
 List, accept, and manage CBTC Minter credentials:
@@ -624,7 +616,7 @@ Optional overrides, for a custom network. An empty value counts as unset:
 Mint and redeem:
 
 - `DESTINATION_BTC_ADDRESS` - Payout address for `cbtc_redeem_flow`
-- `WITHDRAW_AMOUNT` - Amount to burn. `cbtc_redeem_flow` defaults to `0.001`, and the devnet integration test defaults to `TRANSFER_AMOUNT`
+- `WITHDRAW_AMOUNT` - Amount to burn in `cbtc_redeem_flow` (default: `0.001`)
 
 Transfers:
 
@@ -642,7 +634,7 @@ Allocations:
 - `SETTLEMENT_REF_ID` - Settlement reference id (default: cbtc-dvp-example)
 - `ALLOCATION_CONTRACT_ID` - The allocation to withdraw. Set it per run, on the command line.
 
-The receiver's own login, for `reject_transfer` and the devnet integration test:
+The receiver's own login, for `reject_transfer`:
 
 - `RECEIVER_KEYCLOAK_CLIENT_ID` - Client ID for the receiver
 - `RECEIVER_KEYCLOAK_USERNAME` - Username for the receiver
@@ -650,13 +642,6 @@ The receiver's own login, for `reject_transfer` and the devnet integration test:
 - `RECEIVER_LEDGER_HOST` - Optional. Defaults to `LEDGER_HOST`
 - `RECEIVER_KEYCLOAK_HOST` - Optional. Defaults to `KEYCLOAK_HOST`
 - `RECEIVER_KEYCLOAK_REALM` - Optional. Defaults to `KEYCLOAK_REALM`
-
-The devnet integration test only:
-
-- `TOKEN_STANDARD_VERSION` - `V1` or `V2`
-- `RUN_CREDENTIAL_ACCEPT` - Set to `1` to accept a free credential offer during the run
-- `FAUCET_URL` - Optional. Enables the faucet steps
-- `FAUCET_NETWORK` - Faucet network (default: `devnet`)
 
 Logging:
 
