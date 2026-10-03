@@ -11,6 +11,7 @@ use ledger::models::JsSubmitAndWaitForTransactionResponse;
 
 use crate::kits::canton;
 
+pub(crate) mod bind;
 pub(crate) mod credentials;
 pub(crate) mod deposit;
 pub(crate) mod models;
@@ -22,7 +23,7 @@ pub(crate) mod withdraw;
 /// its constants. The trait gets a new constant only when every asset in the
 /// family has the thing it names. A field that only one asset has is an
 /// inherent method on that asset's concrete model.
-pub(crate) trait CantonBridgeV1 {
+pub trait CantonBridgeV1 {
     const TICKER: &'static str;
     /// The asset's path segment in the BitSafe API: `cbtc` or `beth`.
     const API_PATH: &'static str;

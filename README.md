@@ -5,7 +5,7 @@ CBTC and BETH with one API shape, and re-exports the Canton Token Standard
 operations of [canton-lib](https://github.com/DLC-link/canton-lib) under the
 same names [cbtc-lib](https://github.com/DLC-link/cbtc-lib) uses.
 
-Status: under construction. The crate builds and has no asset modules yet.
+Status: under construction. CBTC is ported under `tokens::cbtc`; BETH comes next.
 
 ## Networks
 
