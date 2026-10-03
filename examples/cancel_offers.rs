@@ -1,6 +1,6 @@
 /// Example: Withdraw Pending Transfers
 ///
-/// This example demonstrates how to withdraw all pending CBTC transfers
+/// This example demonstrates how to withdraw all pending transfers of the ASSET token
 /// that you have sent but have not yet been accepted by the receiver.
 ///
 /// Run with: cargo run --example cancel_offers
@@ -9,6 +9,9 @@
 /// re-exports V1's `WithdrawAllParams` unchanged, so calling
 /// `bitsafe_token::cancel_offers::v2::withdraw_all` with the same arguments is the
 /// whole difference.
+///
+/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// examples/README.md lists the other variables.
 use std::env;
 mod shared;
 

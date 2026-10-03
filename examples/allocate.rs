@@ -1,12 +1,15 @@
-/// Example: Allocate CBTC into a DvP settlement leg.
+/// Example: Allocate the ASSET token into a DvP settlement leg.
 ///
-/// Locks the sender's CBTC into one leg of a Delivery-versus-Payment settlement
+/// Locks the sender's tokens into one leg of a Delivery-versus-Payment settlement
 /// via `AllocationFactory_Allocate`. The settlement executor (venue) later
 /// settles all legs atomically before `settleBefore`.
 ///
 /// Run with: cargo run --example allocate
 ///
 /// Make sure to set up your .env file with the required configuration.
+///
+/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// examples/README.md lists the other variables.
 use std::env;
 mod shared;
 

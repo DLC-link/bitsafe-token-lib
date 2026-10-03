@@ -1,4 +1,4 @@
-/// Example: Accept all pending CBTC transfers
+/// Example: Accept all pending transfers of the ASSET token
 ///
 /// Run with: cargo run --example accept_transfers
 ///
@@ -8,9 +8,12 @@
 /// difference.
 ///
 /// This example uses the `bitsafe_token::accept::accept_all` method to automatically
-/// fetch and accept all pending CBTC TransferInstruction contracts for your party.
+/// fetch and accept all pending TransferInstruction contracts of the ASSET token for your party.
 ///
 /// Make sure to set up your .env file with the required configuration.
+///
+/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// examples/README.md lists the other variables.
 use std::env;
 mod shared;
 

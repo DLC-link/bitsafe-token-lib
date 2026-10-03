@@ -598,6 +598,9 @@ Required for all examples:
 - `KEYCLOAK_USERNAME` - Username
 - `KEYCLOAK_PASSWORD` - Password
 - `LEDGER_HOST` - Canton participant JSON ledger API URL, including the API path
+
+Required for every example except `check_dars`:
+
 - `PARTY_ID` - Your party ID
 
 Required for every example that touches a network:
@@ -621,7 +624,7 @@ Optional overrides, for a custom network. An empty value counts as unset:
 Mint and redeem:
 
 - `DESTINATION_BTC_ADDRESS` - Payout address for `cbtc_redeem_flow`
-- `WITHDRAW_AMOUNT` - Amount to burn in the devnet integration test (default: `TRANSFER_AMOUNT`)
+- `WITHDRAW_AMOUNT` - Amount to burn. `cbtc_redeem_flow` defaults to `0.001`, and the devnet integration test defaults to `TRANSFER_AMOUNT`
 
 Transfers:
 

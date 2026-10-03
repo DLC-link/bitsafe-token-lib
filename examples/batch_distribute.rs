@@ -1,4 +1,4 @@
-/// Example: Batch distribute CBTC from a CSV file
+/// Example: Batch distribute the ASSET token from a CSV file
 ///
 /// Run with: cargo run --example batch_distribute
 ///
@@ -8,6 +8,9 @@
 ///   receiver2-party::1220...,3.5
 ///
 /// Make sure to set up your .env file with the required configuration.
+///
+/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// examples/README.md lists the other variables.
 use std::env;
 mod shared;
 

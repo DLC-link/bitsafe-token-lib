@@ -1,4 +1,4 @@
-/// Example: Send CBTC to another party over the Token Standard V2 API
+/// Example: Send the ASSET token to another party over the Token Standard V2 API
 ///
 /// Run with: cargo run --example send_v2
 ///
@@ -8,6 +8,9 @@
 /// party owns: no provider, empty id.
 ///
 /// Make sure to set up your .env file with the required configuration.
+///
+/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// examples/README.md lists the other variables.
 use std::env;
 mod shared;
 

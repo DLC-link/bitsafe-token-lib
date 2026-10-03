@@ -5,8 +5,11 @@
 /// The V2 counterpart of `consolidate_utxos`. The only difference is the
 /// account: V1 takes the party as a string, and V2 takes a
 /// `bitsafe_token::Account`. `Account::basic` builds the unlabelled account every
-/// party owns, with no provider and an empty id. A party can also hold CBTC
+/// party owns, with no provider and an empty id. A party can also hold tokens
 /// under a labelled account, and this example does not reach those.
+///
+/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// examples/README.md lists the other variables.
 use std::env;
 mod shared;
 

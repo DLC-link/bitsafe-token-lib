@@ -1,4 +1,4 @@
-/// Example: Reject incoming CBTC transfer offers
+/// Example: Reject incoming transfer offers of the ASSET token
 ///
 /// Run with: cargo run --example reject_transfer
 ///
@@ -16,6 +16,9 @@
 /// settles on submission and leaves nothing to reject. `send` sends to
 /// `RECEIVER_PARTY_ID` and this example rejects as it, so the sender must
 /// set `RECEIVER_PARTY_ID` to this receiver.
+///
+/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// examples/README.md lists the other variables.
 use std::env;
 mod shared;
 

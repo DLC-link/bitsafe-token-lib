@@ -1,9 +1,12 @@
-/// Example: List Incoming CBTC Offers
+/// Example: List Incoming Offers of the ASSET Token
 ///
-/// This example lists all pending CBTC transfer offers where you are the receiver.
+/// This example lists all pending transfer offers of the ASSET token where you are the receiver.
 /// Use this to see what transfers are waiting for you to accept.
 ///
 /// Run with: cargo run --example list_incoming_offers
+///
+/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// examples/README.md lists the other variables.
 use std::env;
 mod shared;
 

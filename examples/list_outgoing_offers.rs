@@ -1,9 +1,12 @@
-/// Example: List Outgoing CBTC Offers
+/// Example: List Outgoing Offers of the ASSET Token
 ///
-/// This example lists all pending CBTC transfer offers where you are the sender.
+/// This example lists all pending transfer offers of the ASSET token where you are the sender.
 /// Use this to see what transfers you've sent that haven't been accepted yet.
 ///
 /// Run with: cargo run --example list_outgoing_offers
+///
+/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// examples/README.md lists the other variables.
 use std::env;
 mod shared;
 

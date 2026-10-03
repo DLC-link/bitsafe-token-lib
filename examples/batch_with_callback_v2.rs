@@ -1,4 +1,4 @@
-/// Example: Distribute CBTC with a per-transfer callback, Token Standard V2
+/// Example: Distribute the ASSET token with a per-transfer callback, Token Standard V2
 ///
 /// Run with: cargo run --example batch_with_callback_v2
 ///
@@ -12,6 +12,9 @@
 ///
 /// V2 takes a `bitsafe_token::Account` for the sender and for each recipient, where
 /// V1 takes party strings.
+///
+/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// examples/README.md lists the other variables.
 use std::env;
 use std::fs::OpenOptions;
 use std::future::Future;

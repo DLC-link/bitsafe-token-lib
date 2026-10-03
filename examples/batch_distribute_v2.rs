@@ -1,4 +1,4 @@
-/// Example: Batch distribute CBTC from a CSV file, Token Standard V2
+/// Example: Batch distribute the ASSET token from a CSV file, Token Standard V2
 ///
 /// Run with: cargo run --example batch_distribute_v2
 ///
@@ -10,6 +10,9 @@
 /// stays a bare party, and the library lifts it to a basic account. What
 /// changes is the sender: V2 takes a `bitsafe_token::Account` where V1 takes a
 /// party string.
+///
+/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// examples/README.md lists the other variables.
 use std::env;
 mod shared;
 

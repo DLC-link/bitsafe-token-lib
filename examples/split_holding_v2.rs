@@ -5,12 +5,15 @@
 /// Splitting turns one holding into several of the amounts you name, plus
 /// change. This example reads the party's holdings, picks the largest, and
 /// splits it. Set SPLIT_AMOUNTS to a comma-separated list to choose the
-/// outputs; it defaults to one output of 0.001 CBTC.
+/// outputs; it defaults to one output of 0.001.
 ///
 /// V2 takes a `bitsafe_token::Account` where V1 takes the party as a string.
 /// `Account::basic` builds the unlabelled account every party owns, with no
-/// provider and an empty id. A party can also hold CBTC under a labelled
+/// provider and an empty id. A party can also hold tokens under a labelled
 /// account, and this example does not reach those.
+///
+/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// examples/README.md lists the other variables.
 use std::env;
 mod shared;
 

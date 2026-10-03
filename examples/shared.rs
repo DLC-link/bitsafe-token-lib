@@ -78,7 +78,7 @@ pub fn cross_network_warning(variable: &str, value: &str, asset: &AssetInfo) -> 
 }
 
 /// `variable`'s value, trimmed; whitespace and the empty string count as unset.
-fn non_blank(variable: &str) -> Option<String> {
+pub fn non_blank(variable: &str) -> Option<String> {
     env::var(variable)
         .ok()
         .map(|value| value.trim().to_string())

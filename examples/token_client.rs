@@ -1,4 +1,4 @@
-/// Example: read a party's CBTC position through `TokenClient`
+/// Example: read a party's position in the ASSET token through `TokenClient`
 ///
 /// `TokenClient` stores the configuration that otherwise repeats on every
 /// call. This example writes nothing: it reads the balance, the UTXO count

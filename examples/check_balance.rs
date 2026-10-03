@@ -1,7 +1,7 @@
-/// Example: Check CBTC balance and UTXO count
+/// Example: Check the ASSET token balance and UTXO count
 ///
 /// This example demonstrates how to:
-/// 1. Query active CBTC holdings (UTXOs) for a party
+/// 1. Query a party's active holdings (UTXOs) of the ASSET token
 /// 2. Calculate total balance across all UTXOs
 /// 3. Monitor UTXO count and warn about consolidation needs
 ///
@@ -17,7 +17,7 @@
 /// Optional override: REGISTRAR_PARTY.
 ///
 /// Understanding UTXOs:
-/// Each CBTC holding is a separate UTXO (like Bitcoin). Canton has a soft
+/// Each holding is a separate UTXO, as in Bitcoin. Canton has a soft
 /// limit of 10 UTXOs per party per token type. Regular consolidation keeps
 /// your account healthy and operations efficient.
 use std::env;

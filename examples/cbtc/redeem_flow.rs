@@ -15,6 +15,8 @@ use bitsafe_token::tokens::cbtc::redeem::{
 /// 5. Submit withdrawal (burn CBTC and increase pending balance)
 /// 6. Verify the withdrawal was submitted successfully
 ///
+/// WITHDRAW_AMOUNT sets the amount to burn. The default is 0.001.
+///
 /// Note: WithdrawRequests are NOT created atomically with the withdrawal submission.
 /// The attestor network will create WithdrawRequests later. Use the separate
 /// `cbtc_check_withdraw_requests` example to monitor for processed withdrawals.
@@ -187,9 +189,10 @@ async fn main() -> Result<(), String> {
     };
 
     // Step 6: Submit withdrawal (burn CBTC)
-    // For this example, let's try to withdraw a small amount
-    let withdraw_amount = "0.001"; // 0.001 BTC
-    let withdraw_amount_decimal = bitsafe_token::DamlDecimal::parse(withdraw_amount).unwrap();
+    let withdraw_amount =
+        shared::non_blank("WITHDRAW_AMOUNT").unwrap_or_else(|| "0.001".to_string());
+    let withdraw_amount_decimal = bitsafe_token::DamlDecimal::parse(&withdraw_amount)
+        .map_err(|e| format!("WITHDRAW_AMOUNT is not a number: {e}"))?;
 
     if total_cbtc < withdraw_amount_decimal {
         println!(

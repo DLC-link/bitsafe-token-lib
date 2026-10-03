@@ -1,6 +1,6 @@
-/// Example: Stream CBTC to a Single Receiver
+/// Example: Stream the ASSET Token to a Single Receiver
 ///
-/// This script distributes CBTC multiple times to the same receiver.
+/// This script distributes the ASSET token multiple times to the same receiver.
 /// Useful for streaming payments or testing repeated transfers.
 ///
 /// Configuration:
@@ -9,6 +9,9 @@
 /// - TRANSFER_AMOUNT: Amount per transfer
 ///
 /// Run with: cargo run --example stream
+///
+/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// examples/README.md lists the other variables.
 use std::env;
 use std::future::Future;
 use std::pin::Pin;

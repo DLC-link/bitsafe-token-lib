@@ -1,4 +1,3 @@
-use std::future::Future;
 /// Example: Batch distribution with callback
 ///
 /// This example demonstrates how to use the callback mechanism to handle
@@ -7,6 +6,10 @@ use std::future::Future;
 /// - Sending notifications for failed transfers
 /// - Tracking progress in real-time
 /// - Implementing custom retry logic
+///
+/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// examples/README.md lists the other variables.
+use std::future::Future;
 use std::pin::Pin;
 mod shared;
 

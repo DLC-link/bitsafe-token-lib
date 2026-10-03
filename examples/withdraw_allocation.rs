@@ -10,6 +10,9 @@
 /// You supply the allocation's contract id, because nothing in the crate
 /// lists allocations. `allocate` prints the id when it succeeds, along
 /// with the command that reclaims it, so copy that line.
+///
+/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// examples/README.md lists the other variables.
 use std::env;
 mod shared;
 
