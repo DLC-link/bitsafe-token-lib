@@ -60,7 +60,8 @@ mod tests {
     }
 
     #[test]
-    fn all_is_empty_until_an_asset_registers() {
-        assert!(crate::tokens::ALL.is_empty());
+    fn all_lists_every_supported_asset_once() {
+        let tickers: Vec<&str> = crate::tokens::ALL.iter().map(|info| info.ticker).collect();
+        assert_eq!(tickers, vec!["CBTC"]);
     }
 }

@@ -2,5 +2,7 @@
 
 use crate::AssetInfo;
 
+pub mod cbtc;
+
 /// Every asset this crate supports, for tooling that iterates over assets.
-pub const ALL: &[&AssetInfo] = &[];
+pub const ALL: &[&AssetInfo] = &[&cbtc::INFO];
