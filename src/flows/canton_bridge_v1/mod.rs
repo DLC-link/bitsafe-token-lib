@@ -11,6 +11,7 @@ use ledger::models::JsSubmitAndWaitForTransactionResponse;
 
 use crate::kits::canton;
 
+pub(crate) mod credentials;
 pub(crate) mod deposit;
 pub(crate) mod models;
 pub(crate) mod withdraw;
