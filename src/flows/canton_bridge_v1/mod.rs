@@ -7,6 +7,11 @@
 //! asset's public wrapper resolved. A family exists only when two assets
 //! share it; an asset with other choices writes its own flows on the kits.
 
+use ledger::models::JsSubmitAndWaitForTransactionResponse;
+
+use crate::kits::canton;
+
+pub(crate) mod deposit;
 pub(crate) mod models;
 
 /// The Daml names of one asset that has CBTC's choice shape.
@@ -52,8 +57,24 @@ pub(crate) fn check_registrar(actual: &str, expected: &str) -> Result<(), String
     }
 }
 
+/// The contract id of the `entity` contract a transaction created, matched
+/// by the template's module and entity, so both id forms match.
+pub(crate) fn created_contract_id(
+    response: &JsSubmitAndWaitForTransactionResponse,
+    template_id: &str,
+    entity: &str,
+) -> Result<String, String> {
+    canton::created_by_suffix(response, canton::template_suffix(template_id))
+        .map(|created| created.contract_id.clone())
+        .ok_or_else(|| format!("No {} was created in the transaction", entity))
+}
+
 #[cfg(test)]
 mod tests {
+    use serde_json::json;
+
+    use crate::test_fixtures::{created_event_value, exercised_event_value, transaction_response};
+
     use super::*;
 
     #[test]
@@ -63,5 +84,42 @@ mod tests {
             check_registrar("cbtc-network::a", "cbtc-network::b").unwrap_err(),
             "network mismatch: account registrar cbtc-network::a, expected cbtc-network::b"
         );
+    }
+
+    #[test]
+    fn created_contract_id_finds_the_new_contract_by_template_suffix() {
+        let response = transaction_response(
+            "tx-1",
+            json!([
+                exercised_event_value(
+                    "pkg:CBTC.DepositAccount:CBTCDepositAccountRules",
+                    "C",
+                    json!(null)
+                ),
+                created_event_value(
+                    "f240:CBTC.DepositAccount:CBTCDepositAccount",
+                    "000b5aff",
+                    json!(null)
+                ),
+            ]),
+        );
+        let found = created_contract_id(
+            &response,
+            "#cbtc:CBTC.DepositAccount:CBTCDepositAccount",
+            "DepositAccount",
+        );
+        assert_eq!(found.unwrap(), "000b5aff");
+    }
+
+    #[test]
+    fn created_contract_id_names_the_entity_when_nothing_matches() {
+        let response = transaction_response("tx-2", json!(null));
+        let error = created_contract_id(
+            &response,
+            "#cbtc:CBTC.WithdrawAccount:CBTCWithdrawAccount",
+            "WithdrawAccount",
+        )
+        .unwrap_err();
+        assert_eq!(error, "No WithdrawAccount was created in the transaction");
     }
 }
