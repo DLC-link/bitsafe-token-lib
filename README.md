@@ -34,9 +34,8 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo test
 ```
 
-`tests/dependency_rule.rs` enforces the dependency rule: `tokens` may use
-`flows` and `kits`, `flows` may use `kits`, and nothing imports upward. It
-scans every source line under `src/kits` and `src/flows` for an upward path.
+The dependency rule: `tokens` may use `flows` and `kits`, `flows` may use
+`kits`, and nothing imports upward. Review checks it.
 
 ## License
 

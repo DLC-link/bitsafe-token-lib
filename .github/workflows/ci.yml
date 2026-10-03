@@ -24,7 +24,6 @@ jobs:
         run: cargo fmt -- --check
       - name: cargo clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
-      # Includes tests/dependency_rule.rs, which enforces the layering rule.
       - name: cargo test
         run: cargo test
 
