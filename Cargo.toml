@@ -6,6 +6,7 @@ description = "Client library for BitSafe bridged assets on Canton: CBTC, BETH"
 license = "Apache-2.0"
 repository = "https://github.com/DLC-link/bitsafe-token-lib"
 publish = false
+autoexamples = false
 
 [lib]
 name = "bitsafe_token"
@@ -27,7 +28,120 @@ token = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.9.0" }
 uuid = { version = "1.18", features = ["v4"] }
 
 [dev-dependencies]
+chrono = { version = "0.4.42" }
+csv = { version = "1.3" }
+dotenvy = { version = "0.15" }
+env_logger = { version = "0.11" }
+keycloak = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.9.0" }
 tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
+
+[[example]]
+name = "accept_transfers"
+path = "examples/accept_transfers.rs"
+
+[[example]]
+name = "allocate"
+path = "examples/allocate.rs"
+
+[[example]]
+name = "batch_distribute"
+path = "examples/batch_distribute.rs"
+
+[[example]]
+name = "batch_distribute_v2"
+path = "examples/batch_distribute_v2.rs"
+
+[[example]]
+name = "batch_with_callback"
+path = "examples/batch_with_callback.rs"
+
+[[example]]
+name = "batch_with_callback_v2"
+path = "examples/batch_with_callback_v2.rs"
+
+[[example]]
+name = "cancel_offers"
+path = "examples/cancel_offers.rs"
+
+[[example]]
+name = "check_balance"
+path = "examples/check_balance.rs"
+
+[[example]]
+name = "check_dars"
+path = "examples/check_dars.rs"
+
+[[example]]
+name = "consolidate_utxos"
+path = "examples/consolidate_utxos.rs"
+
+[[example]]
+name = "consolidate_utxos_v2"
+path = "examples/consolidate_utxos_v2.rs"
+
+[[example]]
+name = "list_incoming_offers"
+path = "examples/list_incoming_offers.rs"
+
+[[example]]
+name = "list_outgoing_offers"
+path = "examples/list_outgoing_offers.rs"
+
+[[example]]
+name = "reject_transfer"
+path = "examples/reject_transfer.rs"
+
+[[example]]
+name = "send"
+path = "examples/send.rs"
+
+[[example]]
+name = "send_v2"
+path = "examples/send_v2.rs"
+
+[[example]]
+name = "split_holding_v2"
+path = "examples/split_holding_v2.rs"
+
+[[example]]
+name = "stream"
+path = "examples/stream.rs"
+
+[[example]]
+name = "token_client"
+path = "examples/token_client.rs"
+
+[[example]]
+name = "withdraw_allocation"
+path = "examples/withdraw_allocation.rs"
+
+[[example]]
+name = "cbtc_credentials"
+path = "examples/cbtc/credentials.rs"
+
+[[example]]
+name = "cbtc_mint_flow"
+path = "examples/cbtc/mint_flow.rs"
+
+[[example]]
+name = "cbtc_redeem_flow"
+path = "examples/cbtc/redeem_flow.rs"
+
+[[example]]
+name = "cbtc_test_burn"
+path = "examples/cbtc/test_burn.rs"
+
+[[example]]
+name = "cbtc_list_deposit_addresses"
+path = "examples/cbtc/list_deposit_addresses.rs"
+
+[[example]]
+name = "cbtc_list_withdraw_accounts"
+path = "examples/cbtc/list_withdraw_accounts.rs"
+
+[[example]]
+name = "cbtc_check_withdraw_requests"
+path = "examples/cbtc/check_withdraw_requests.rs"
 
 [profile.release]
 opt-level = 3

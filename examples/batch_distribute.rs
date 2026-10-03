@@ -1,0 +1,86 @@
+/// Example: Batch distribute CBTC from a CSV file
+///
+/// Run with: cargo run --example batch_distribute
+///
+/// CSV format (recipients.csv):
+///   receiver,amount
+///   receiver1-party::1220...,5.0
+///   receiver2-party::1220...,3.5
+///
+/// Make sure to set up your .env file with the required configuration.
+use std::env;
+mod shared;
+
+#[tokio::main]
+async fn main() -> Result<(), String> {
+    // Load environment variables
+    dotenvy::dotenv().ok();
+    env_logger::init();
+
+    // Get CSV file path from environment or use default
+    let csv_path = env::var("RECIPIENTS_CSV").unwrap_or_else(|_| "recipients.csv".to_string());
+
+    if !std::path::Path::new(&csv_path).exists() {
+        return Err(format!(
+            "CSV file not found: {}\n\nCreate a CSV file with format:\nreceiver,amount\nparty1::1220...,5.0\nparty2::1220...,3.5",
+            csv_path
+        ));
+    }
+
+    println!("📦 Batch Distribution");
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!("CSV File: {}", csv_path);
+
+    let sender_party = env::var("PARTY_ID").expect("PARTY_ID must be set");
+    let decentralized_party = shared::registrar(shared::asset());
+
+    let batch_params = bitsafe_token::batch::Params {
+        csv_path: csv_path.clone(),
+        sender: sender_party.clone(),
+        instrument_id: shared::instrument(shared::asset()),
+        ledger_host: env::var("LEDGER_HOST").expect("LEDGER_HOST must be set"),
+        registry_url: shared::resolve_registry_url(),
+        decentralized_party_id: decentralized_party,
+        keycloak_client_id: env::var("KEYCLOAK_CLIENT_ID").expect("KEYCLOAK_CLIENT_ID must be set"),
+        keycloak_username: env::var("KEYCLOAK_USERNAME").expect("KEYCLOAK_USERNAME must be set"),
+        keycloak_password: env::var("KEYCLOAK_PASSWORD").expect("KEYCLOAK_PASSWORD must be set"),
+        keycloak_url: keycloak::login::token_url(
+            &env::var("KEYCLOAK_HOST").expect("KEYCLOAK_HOST must be set"),
+            &env::var("KEYCLOAK_REALM").expect("KEYCLOAK_REALM must be set"),
+        ),
+        reference_base: None,
+    };
+
+    println!("Sender: {}", sender_party);
+    println!("\nProcessing batch distribution...");
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+
+    let result = bitsafe_token::batch::submit_from_csv(batch_params).await?;
+
+    println!("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!("Successful transfers: {}", result.successful_count);
+
+    if result.failed_count > 0 {
+        println!("Failed transfers:     {}", result.failed_count);
+        for failed in result.results.iter().filter(|r| !r.success) {
+            println!(
+                "  {} to {}: {}",
+                failed.amount,
+                failed.receiver,
+                failed.error.as_deref().unwrap_or("no error recorded")
+            );
+        }
+        return Err(format!(
+            "{} of {} transfers failed",
+            result.failed_count,
+            result.results.len()
+        ));
+    }
+
+    println!("\n✅ Every transfer succeeded.");
+    println!(
+        "\nNote: a receiver accepts an offer to complete it. A transfer that settled on\nsubmission leaves nothing to accept."
+    );
+
+    Ok(())
+}

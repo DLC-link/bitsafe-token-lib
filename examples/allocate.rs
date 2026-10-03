@@ -1,0 +1,142 @@
+/// Example: Allocate CBTC into a DvP settlement leg.
+///
+/// Locks the sender's CBTC into one leg of a Delivery-versus-Payment settlement
+/// via `AllocationFactory_Allocate`. The settlement executor (venue) later
+/// settles all legs atomically before `settleBefore`.
+///
+/// Run with: cargo run --example allocate
+///
+/// Make sure to set up your .env file with the required configuration.
+use std::env;
+mod shared;
+
+#[tokio::main]
+async fn main() -> Result<(), String> {
+    // Load environment variables
+    dotenvy::dotenv().ok();
+    env_logger::init();
+
+    // Authenticate
+    println!("Authenticating...");
+    let login_params = keycloak::login::PasswordParams {
+        client_id: env::var("KEYCLOAK_CLIENT_ID").expect("KEYCLOAK_CLIENT_ID must be set"),
+        username: env::var("KEYCLOAK_USERNAME").expect("KEYCLOAK_USERNAME must be set"),
+        password: env::var("KEYCLOAK_PASSWORD").expect("KEYCLOAK_PASSWORD must be set"),
+        url: keycloak::login::token_url(
+            &env::var("KEYCLOAK_HOST").expect("KEYCLOAK_HOST must be set"),
+            &env::var("KEYCLOAK_REALM").expect("KEYCLOAK_REALM must be set"),
+        ),
+    };
+
+    let auth = keycloak::login::password(login_params)
+        .await
+        .map_err(|e| format!("Authentication failed: {}", e))?;
+
+    println!("Authenticated successfully!");
+
+    // Settlement participants
+    let sender_party = env::var("PARTY_ID").expect("PARTY_ID must be set");
+    let receiver_party =
+        env::var("RECEIVER_PARTY_ID").expect("RECEIVER_PARTY_ID must be set (the leg receiver)");
+    let executor_party = env::var("EXECUTOR_PARTY_ID")
+        .expect("EXECUTOR_PARTY_ID must be set (the settlement executor / venue)");
+    let amount_str = env::var("ALLOCATE_AMOUNT").unwrap_or_else(|_| "0.1".to_string());
+    let amount = bitsafe_token::DamlDecimal::parse(&amount_str).expect("Invalid ALLOCATE_AMOUNT");
+    let decentralized_party = shared::registrar(shared::asset());
+    let settlement_ref_id =
+        env::var("SETTLEMENT_REF_ID").unwrap_or_else(|_| "cbtc-dvp-example".to_string());
+
+    // Allocation must be funded before `allocateBefore` and settled before
+    // `settleBefore` (which must be later).
+    let now = chrono::Utc::now();
+    let allocate_before = now
+        .checked_add_signed(chrono::Duration::hours(24))
+        .expect("allocateBefore offset overflowed")
+        .to_rfc3339();
+    let settle_before = now
+        .checked_add_signed(chrono::Duration::hours(48))
+        .expect("settleBefore offset overflowed")
+        .to_rfc3339();
+
+    println!(
+        "\nAllocating {} {} into settlement leg",
+        amount,
+        shared::asset().ticker
+    );
+    println!("Sender:   {}", sender_party);
+    println!("Receiver: {}", receiver_party);
+    println!("Executor: {}", executor_party);
+
+    let allocation = bitsafe_token::types::allocation::AllocationSpecification {
+        settlement: bitsafe_token::types::allocation::SettlementInfo {
+            executor: executor_party,
+            settlement_ref: bitsafe_token::types::allocation::Reference {
+                id: settlement_ref_id,
+                cid: None,
+            },
+            requested_at: now.to_rfc3339(),
+            allocate_before,
+            settle_before,
+            meta: bitsafe_token::types::allocation::Metadata::default(),
+        },
+        transfer_leg_id: "leg0".to_string(),
+        transfer_leg: bitsafe_token::types::allocation::TransferLeg {
+            sender: sender_party,
+            receiver: receiver_party,
+            amount,
+            instrument_id: shared::instrument(shared::asset()),
+            meta: bitsafe_token::types::allocation::Metadata::default(),
+        },
+    };
+
+    let params = bitsafe_token::allocation::Params {
+        allocation,
+        requested_at: now.to_rfc3339(),
+        input_holding_cids: Vec::new(), // Library auto-selects the sender's holdings
+        ledger_host: env::var("LEDGER_HOST").expect("LEDGER_HOST must be set"),
+        access_token: auth.access_token,
+        registry_url: shared::resolve_registry_url(),
+        decentralized_party_id: decentralized_party,
+    };
+
+    // Submit allocation
+    println!("\nSubmitting allocation...");
+    let result = bitsafe_token::allocation::allocate(params).await?;
+
+    println!("✅ Allocation submitted successfully!");
+    if !result.sender_change_cids.is_empty() {
+        println!("   Change holdings:");
+        for cid in &result.sender_change_cids {
+            println!("     - {}", cid);
+        }
+    }
+    println!(
+        "\nNote: the executor settles all legs of the settlement atomically before settleBefore."
+    );
+
+    // The registry either creates the allocation or creates an instruction
+    // that needs a further step. Only the first can be withdrawn.
+    match &result.outcome {
+        bitsafe_token::allocation::AllocationOutcome::Completed { allocation_cid } => {
+            println!("\n   Allocation: {}", allocation_cid);
+            println!("\nTo reclaim before settlement, withdraw the allocation as the sender:");
+            println!(
+                "  ALLOCATION_CONTRACT_ID={} cargo run --example withdraw_allocation",
+                allocation_cid
+            );
+        }
+        bitsafe_token::allocation::AllocationOutcome::Pending {
+            allocation_instruction_cid,
+        } => {
+            println!(
+                "\n   Allocation instruction: {}",
+                allocation_instruction_cid
+            );
+            println!(
+                "\nThe registry created an instruction rather than the allocation, so there is\nnothing to withdraw yet. Keep this id: it is the only handle on the instruction."
+            );
+        }
+    }
+
+    Ok(())
+}
