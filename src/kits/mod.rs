@@ -2,4 +2,5 @@
 //! kits below it, `canton-lib` and third-party crates. A kit never imports a
 //! flow family or an asset module.
 
+pub(crate) mod bitsafe_api;
 pub(crate) mod canton;
