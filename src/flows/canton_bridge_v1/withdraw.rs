@@ -54,7 +54,9 @@ pub struct SubmitWithdrawParams<'a, A> {
     pub amount: DamlDecimal,
     /// The holdings to burn, from `list_holdings`. Their sum must cover `amount`.
     pub holdings: &'a [Holding],
-    pub credential_cids: Option<Vec<String>>,
+    /// The party's Minter credential cids, from `minter_credential_cids`.
+    /// The burn needs at least one.
+    pub credential_cids: Vec<String>,
 }
 
 /// Lists the party's live withdraw accounts of this asset.
@@ -156,6 +158,15 @@ pub(crate) fn check_withdraw<A: CantonBridgeV1>(
 ) -> Result<(), String> {
     let account = params.account;
     check_registrar(&account.registrar, registrar)?;
+    if params.party != account.owner {
+        return Err(format!(
+            "Party {} is not the owner {} of the withdraw account",
+            params.party, account.owner
+        ));
+    }
+    if params.credential_cids.is_empty() {
+        return Err("Credential CIDs required".to_string());
+    }
     if account.pending_balance != DamlDecimal::ZERO {
         return Err(format!(
             "A withdrawal is in progress: pending balance {}",
@@ -174,6 +185,12 @@ pub(crate) fn check_withdraw<A: CantonBridgeV1>(
         id: A::TICKER.to_string(),
     };
     for holding in params.holdings {
+        if holding.owner != account.owner {
+            return Err(format!(
+                "Holding {} is owned by {}, expected {}",
+                holding.contract_id, holding.owner, account.owner
+            ));
+        }
         if holding.instrument_id != expected {
             return Err(format!(
                 "Holding {} has instrument {}/{}, expected {}/{}",
@@ -356,7 +373,7 @@ mod tests {
             account,
             amount: d(amount),
             holdings,
-            credential_cids: Some(vec!["00cred".to_string()]),
+            credential_cids: vec!["00cred".to_string()],
         }
     }
 
@@ -377,6 +394,46 @@ mod tests {
         assert_eq!(
             check_withdraw("cbtc-network::other", &params(&account, &holdings, "0.5")).unwrap_err(),
             "network mismatch: account registrar cbtc-network::1220, expected cbtc-network::other"
+        );
+    }
+
+    #[test]
+    fn a_withdraw_fails_when_the_caller_is_not_the_account_owner() {
+        let account = account("0", json!(null));
+        let holdings = [holding("00h", REGISTRAR, "CBTC", "1")];
+        let mut p = params(&account, &holdings, "0.5");
+        p.party = "bob".to_string();
+        assert_eq!(
+            check_withdraw(REGISTRAR, &p).unwrap_err(),
+            "Party bob is not the owner alice of the withdraw account"
+        );
+    }
+
+    #[test]
+    fn a_withdraw_fails_without_credentials() {
+        let account = account("0", json!(null));
+        let holdings = [holding("00h", REGISTRAR, "CBTC", "1")];
+        let mut p = params(&account, &holdings, "0.5");
+        p.credential_cids = Vec::new();
+        assert_eq!(
+            check_withdraw(REGISTRAR, &p).unwrap_err(),
+            "Credential CIDs required"
+        );
+    }
+
+    #[test]
+    fn a_withdraw_fails_on_a_holding_of_another_owner() {
+        let account = account("0", json!(null));
+        let holdings = [
+            holding("00h1", REGISTRAR, "CBTC", "1"),
+            Holding {
+                owner: "bob".to_string(),
+                ..holding("00h2", REGISTRAR, "CBTC", "1")
+            },
+        ];
+        assert_eq!(
+            check_withdraw(REGISTRAR, &params(&account, &holdings, "0.5")).unwrap_err(),
+            "Holding 00h2 is owned by bob, expected alice"
         );
     }
 

@@ -124,7 +124,7 @@ Complete flow for redeeming CBTC back to BTC:
 cargo run --example cbtc_redeem_flow
 ```
 
-Creates a withdraw account and submits a withdrawal. `submit_withdraw` checks the transaction limits, the account's pending balance and the holdings before it sends anything. Requires a Minter credential and CBTC balance.
+Creates a withdraw account and submits a withdrawal. `submit_withdraw` checks the caller, the credentials, the transaction limits, the account's pending balance and the holdings before it sends anything. Requires a Minter credential and CBTC balance.
 
 ### List Withdraw Accounts
 

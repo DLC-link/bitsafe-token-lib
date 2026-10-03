@@ -1022,7 +1022,7 @@ async fn devnet_integration() -> Result<(), String> {
                 account: wa,
                 amount: withdraw_amount_decimal,
                 holdings: &selected,
-                credential_cids: Some(minter_credential_cids.clone()),
+                credential_cids: minter_credential_cids.clone(),
             },
         )
         .await?;

@@ -340,7 +340,7 @@ mod tests {
             account: &account,
             amount: DamlDecimal::parse("0.5").unwrap(),
             holdings: &holdings,
-            credential_cids: Some(vec!["00cred".to_string()]),
+            credential_cids: vec!["00cred".to_string()],
         };
         let error = match redeem::submit_withdraw(Network::Mainnet, params).await {
             Ok(_) => panic!("an account from another network must be refused"),

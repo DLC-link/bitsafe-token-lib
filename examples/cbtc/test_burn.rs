@@ -111,7 +111,7 @@ async fn main() -> Result<(), String> {
             account: withdraw_account,
             amount: burn_amount,
             holdings: &selected_holdings,
-            credential_cids: Some(minter_credential_cids),
+            credential_cids: minter_credential_cids,
         },
     )
     .await?;
