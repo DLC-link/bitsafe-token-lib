@@ -312,6 +312,32 @@ mod tests {
         assert!(minter_credential_cids(Network::Mainnet, &[credential]).is_empty());
     }
 
+    #[test]
+    fn minter_credential_offers_use_the_network_registrar() {
+        use token::credentials::{Claim, CredentialOffer};
+        let offer = CredentialOffer {
+            contract_id: "00o".to_string(),
+            template_id: String::new(),
+            created_event_blob: String::new(),
+            issuer: registrar(Network::Testnet).to_string(),
+            holder: "alice".to_string(),
+            id: String::new(),
+            description: String::new(),
+            claims: vec![Claim {
+                subject: "alice".to_string(),
+                property: "hasCBTCRole".to_string(),
+                value: "Minter".to_string(),
+            }],
+        };
+        let offers = [offer];
+        let kept: Vec<&str> = minter_credential_offers(Network::Testnet, &offers)
+            .into_iter()
+            .map(|offer| offer.contract_id.as_str())
+            .collect();
+        assert_eq!(kept, vec!["00o"]);
+        assert!(minter_credential_offers(Network::Mainnet, &offers).is_empty());
+    }
+
     /// The registrar check runs before any request. The test has no network;
     /// an HTTP call would fail with a different message.
     #[tokio::test]

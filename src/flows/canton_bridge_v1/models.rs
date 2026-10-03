@@ -377,4 +377,39 @@ mod tests {
                 .unwrap();
         assert!(account.check_amount(d("1000000")).is_ok());
     }
+
+    #[test]
+    fn a_withdraw_request_with_a_bad_amount_fails_by_name() {
+        let mut args = request_args();
+        args["amount"] = json!("not-a-number");
+        let error =
+            WithdrawRequest::<Cbtc>::from_active_contract(&active_contract_of(WR, "00wr", args))
+                .unwrap_err();
+        assert!(error.starts_with("Invalid 'amount' field: "), "{error}");
+    }
+
+    #[test]
+    fn a_withdraw_account_with_a_bad_pending_balance_fails_by_name() {
+        let args = json!({
+            "owner": "alice", "operator": "op", "registrar": "r", "destinationBtcAddress": "bcrt1qexample00000",
+            "pendingBalance": "not-a-number",
+        });
+        let error =
+            WithdrawAccount::<Cbtc>::from_active_contract(&active_contract_of(WA, "00wa", args))
+                .unwrap_err();
+        assert!(
+            error.starts_with("Invalid 'pendingBalance' field: "),
+            "{error}"
+        );
+    }
+
+    #[test]
+    fn a_deposit_account_with_bad_limits_fails_by_name() {
+        let mut args = deposit_args(json!(null));
+        args["limits"] = json!("not-an-object");
+        let error =
+            DepositAccount::<Cbtc>::from_active_contract(&active_contract_of(DA, "00da", args))
+                .unwrap_err();
+        assert!(error.starts_with("Invalid 'limits' field: "), "{error}");
+    }
 }
