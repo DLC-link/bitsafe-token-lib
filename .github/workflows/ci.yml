@@ -37,3 +37,17 @@ jobs:
       - uses: EmbarkStudios/cargo-deny-action@v2
         with:
           command: check advisories
+
+  live-api:
+    # Not a required check: a down environment must not block a merge, and a
+    # changed API shape still shows as a red job.
+    name: Live API (not required)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install toolchain
+        run: rustup show
+      - uses: Swatinem/rust-cache@v2
+      - name: Check the deployed BitSafe API shapes
+        run: cargo test --lib live_api -- --ignored

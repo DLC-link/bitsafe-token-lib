@@ -17,6 +17,9 @@ pub(crate) mod deposit;
 pub(crate) mod models;
 pub(crate) mod withdraw;
 
+#[cfg(test)]
+mod live_api;
+
 /// The Daml names of one asset that has CBTC's choice shape.
 ///
 /// Every value is a compile-time literal, the same strings `cbtc-lib` held in
