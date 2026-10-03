@@ -13,6 +13,7 @@ use crate::kits::canton;
 
 pub(crate) mod deposit;
 pub(crate) mod models;
+pub(crate) mod withdraw;
 
 /// The Daml names of one asset that has CBTC's choice shape.
 ///
