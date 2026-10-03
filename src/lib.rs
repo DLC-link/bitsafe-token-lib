@@ -9,10 +9,16 @@ pub use network::{Network, ParseNetworkError};
 mod asset;
 pub use asset::AssetInfo;
 
+// Task 8 removes these two attributes, when the bind macro calls the kits.
+#[allow(dead_code)]
 pub(crate) mod flows;
+#[allow(dead_code)]
 pub(crate) mod kits;
 /// Every supported asset. The whole asset-facing API lives here.
 pub mod tokens;
+
+#[cfg(test)]
+mod test_fixtures;
 
 /// The parameter types the Token Standard operations take.
 ///

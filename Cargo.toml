@@ -18,8 +18,16 @@ uninlined_format_args = "allow"
 
 [dependencies]
 common = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.9.0" }
+ledger = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.9.0" }
 registry = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.9.0" }
+reqwest = { version = "0.12.24", features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1" }
 token = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.9.0" }
+uuid = { version = "1.18", features = ["v4"] }
+
+[dev-dependencies]
+tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
 
 [profile.release]
 opt-level = 3

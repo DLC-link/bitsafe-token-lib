@@ -84,8 +84,14 @@ name = "bitsafe-token"
 version = "0.1.0"
 dependencies = [
  "common",
+ "ledger",
  "registry",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
  "token",
+ "tokio",
+ "uuid",
 ]
 
 [[package]]
