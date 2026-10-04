@@ -293,11 +293,24 @@ pub(crate) async fn submit_withdraw<A: CantonBridgeV1>(
         &format!("{}/v1/token-standard-contracts", A::API_PATH),
     )
     .await?;
+    submit_withdraw_with_contracts(registrar, &contracts, params).await
+}
+
+/// The burn with the token standard contracts already in hand.
+/// `submit_withdraw` calls it after the API fetch, and the localnet suite
+/// calls it with contracts read from the ledger. It runs the local checks
+/// again, which costs nothing, because they do no I/O.
+pub(crate) async fn submit_withdraw_with_contracts<A: CantonBridgeV1>(
+    registrar: &str,
+    contracts: &TokenStandardContracts<A>,
+    params: SubmitWithdrawParams<'_, A>,
+) -> Result<WithdrawAccount<A>, String> {
+    check_withdraw(registrar, &params)?;
     let response = canton::exercise(
         &params.ledger_host,
         &params.party,
         &params.access_token,
-        withdraw_exercise(&params, &contracts),
+        withdraw_exercise(&params, contracts),
     )
     .await?;
     recreated_withdraw_account(&response)
@@ -606,6 +619,25 @@ mod tests {
         assert_eq!(
             error,
             "destination address has 13 characters, expected 14 to 74"
+        );
+    }
+
+    /// The local checks run before any ledger call. The test has no ledger;
+    /// a ledger call would fail with a different message.
+    #[tokio::test]
+    async fn submit_withdraw_with_contracts_runs_the_local_checks_first() {
+        let account = account("0", json!(null));
+        let holdings = [holding("00h", REGISTRAR, "CBTC", "1")];
+        let mut p = params(&account, &holdings, "0.5");
+        p.ledger_host = "not-a-host".to_string();
+        p.party = "bob".to_string();
+        let error = match submit_withdraw_with_contracts(REGISTRAR, &contracts(true), p).await {
+            Ok(_) => panic!("a caller who is not the owner must be refused"),
+            Err(error) => error,
+        };
+        assert_eq!(
+            error,
+            "Party bob is not the owner alice of the withdraw account"
         );
     }
 }
