@@ -69,9 +69,6 @@ pub(crate) struct Fixture {
     /// The registrar's user service. The registrar offers credentials
     /// through it.
     pub(crate) user_service: String,
-    /// The registrar's credentials: the provider credential from the
-    /// operator first, the registrar credential it issued itself second.
-    pub(crate) issuer_credentials: Vec<ContractInfo>,
     /// The registrar's allocation factory, which mints and burns CBTC.
     pub(crate) allocation_factory: ContractInfo,
     /// The CBTC instrument configuration.
@@ -298,9 +295,6 @@ impl Fixture {
                         "id": TICKER,
                         "scheme": "RegistrarInternalScheme",
                     }],
-                    // The test instrument has no issuer requirements, so the
-                    // suite checks the format of the issuer credential but
-                    // not which credential the burn sends.
                     "issuerRequirements": [],
                     "holderRequirements": [],
                 }),
@@ -318,10 +312,6 @@ impl Fixture {
         let deposit_rules = ledger.create(&[r], DEPOSIT_RULES, rules.clone()).await?;
         let withdraw_rules = ledger.create(&[r], WITHDRAW_RULES, rules).await?;
 
-        let issuer_credentials = vec![
-            read_back(&ledger, r, CREDENTIAL, &provider_credential).await?,
-            read_back(&ledger, r, CREDENTIAL, &registrar_credential).await?,
-        ];
         let allocation_factory =
             read_back(&ledger, r, ALLOCATION_FACTORY, &allocation_factory).await?;
         let instrument_configuration = read_back(
@@ -341,7 +331,6 @@ impl Fixture {
             user,
             governance_rules,
             user_service,
-            issuer_credentials,
             allocation_factory,
             instrument_configuration,
             deposit_rules,
@@ -365,8 +354,6 @@ impl Fixture {
         serde_json::from_value(json!({
             "burn_mint_factory": self.allocation_factory,
             "instrument_configuration": self.instrument_configuration,
-            // The registrar credential.
-            "issuer_credential": self.issuer_credentials[1],
         }))
         .expect("token standard contracts")
     }

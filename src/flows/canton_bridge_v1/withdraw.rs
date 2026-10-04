@@ -222,19 +222,16 @@ pub(crate) fn withdraw_exercise<'a, A: CantonBridgeV1>(
     params: &'a SubmitWithdrawParams<'_, A>,
     contracts: &TokenStandardContracts<A>,
 ) -> Exercise<'a> {
-    let issuer_credentials: Vec<Value> = contracts
-        .issuer_credential
-        .iter()
-        .map(|credential| json!({"tag": "AV_ContractId", "value": credential.contract_id}))
-        .collect();
     let mut context = Map::new();
     context.insert(
         "utility.digitalasset.com/instrument-configuration".to_string(),
         json!({"tag": "AV_ContractId", "value": contracts.instrument_configuration.contract_id}),
     );
+    // Neither the CBTC nor the BETH Daml requires an issuer credential, so
+    // the list is always empty.
     context.insert(
         "utility.digitalasset.com/issuer-credentials".to_string(),
-        json!({"tag": "AV_List", "value": issuer_credentials}),
+        json!({"tag": "AV_List", "value": []}),
     );
     let holding_cids: Vec<&str> = params
         .holdings
@@ -251,22 +248,15 @@ pub(crate) fn withdraw_exercise<'a, A: CantonBridgeV1>(
         },
         "credentialCids": params.credential_cids,
     });
-    let mut disclosed = vec![
-        contracts.burn_mint_factory.disclosed(),
-        contracts.instrument_configuration.disclosed(),
-    ];
-    disclosed.extend(
-        contracts
-            .issuer_credential
-            .iter()
-            .map(|credential| credential.disclosed()),
-    );
     Exercise {
         template_id: A::WITHDRAW_ACCOUNT,
         contract_id: &params.account.contract_id,
         choice: A::WITHDRAW_CHOICE,
         argument,
-        disclosed,
+        disclosed: vec![
+            contracts.burn_mint_factory.disclosed(),
+            contracts.instrument_configuration.disclosed(),
+        ],
     }
 }
 
@@ -498,13 +488,16 @@ mod tests {
         );
     }
 
-    fn contracts(issuer: bool) -> TokenStandardContracts<Cbtc> {
+    /// The contracts as the API returns them today, still with the
+    /// deprecated `issuer_credential`, which the burn must not use.
+    fn contracts() -> TokenStandardContracts<Cbtc> {
         let info = |name: &str| json!({"template_id": format!("pkg:{name}"), "contract_id": format!("00{name}"), "created_event_blob": "b"});
-        let mut body = json!({"burn_mint_factory": info("factory"), "instrument_configuration": info("config")});
-        if issuer {
-            body["issuer_credential"] = info("issuer");
-        }
-        serde_json::from_value(body).unwrap()
+        serde_json::from_value(json!({
+            "burn_mint_factory": info("factory"),
+            "instrument_configuration": info("config"),
+            "issuer_credential": info("issuer"),
+        }))
+        .unwrap()
     }
 
     #[test]
@@ -512,7 +505,7 @@ mod tests {
         let account = account("0", json!(null));
         let holdings = [holding("00h1", REGISTRAR, "CBTC", "1")];
         let p = params(&account, &holdings, "0.00000001");
-        let command = withdraw_exercise(&p, &contracts(true));
+        let command = withdraw_exercise(&p, &contracts());
         assert_eq!(
             command.template_id,
             "#cbtc:CBTC.WithdrawAccount:CBTCWithdrawAccount"
@@ -535,27 +528,14 @@ mod tests {
         );
         assert_eq!(
             context["utility.digitalasset.com/issuer-credentials"],
-            json!({"tag": "AV_List", "value": [{"tag": "AV_ContractId", "value": "00issuer"}]})
+            json!({"tag": "AV_List", "value": []})
         );
         let disclosed: Vec<&str> = command
             .disclosed
             .iter()
             .map(|c| c.contract_id.as_str())
             .collect();
-        assert_eq!(disclosed, vec!["00factory", "00config", "00issuer"]);
-    }
-
-    #[test]
-    fn the_burn_without_an_issuer_credential_sends_an_empty_list() {
-        let account = account("0", json!(null));
-        let holdings = [holding("00h1", REGISTRAR, "CBTC", "1")];
-        let p = params(&account, &holdings, "0.5");
-        let command = withdraw_exercise(&p, &contracts(false));
-        assert_eq!(
-            command.argument["extraArgs"]["context"]["values"]["utility.digitalasset.com/issuer-credentials"],
-            json!({"tag": "AV_List", "value": []})
-        );
-        assert_eq!(command.disclosed.len(), 2);
+        assert_eq!(disclosed, vec!["00factory", "00config"]);
     }
 
     #[test]
@@ -631,7 +611,7 @@ mod tests {
         let mut p = params(&account, &holdings, "0.5");
         p.ledger_host = "not-a-host".to_string();
         p.party = "bob".to_string();
-        let error = match submit_withdraw_with_contracts(REGISTRAR, &contracts(true), p).await {
+        let error = match submit_withdraw_with_contracts(REGISTRAR, &contracts(), p).await {
             Ok(_) => panic!("a caller who is not the owner must be refused"),
             Err(error) => error,
         };

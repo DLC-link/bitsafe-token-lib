@@ -65,7 +65,7 @@ async fn localnet_cbtc() {
     );
     assert!(!rules.da_rules.created_event_blob.is_empty());
     let contracts = fixture.token_standard_contracts::<Cbtc>();
-    assert!(contracts.issuer_credential.is_some());
+    assert!(!contracts.burn_mint_factory.created_event_blob.is_empty());
     assert_eq!(fixture.instrument().id, "CBTC");
 
     let minter_cids = credentials_phase(&fixture).await;
@@ -133,16 +133,14 @@ async fn mint_phase(fixture: &Fixture, minter_cids: &[String]) -> DepositAccount
         .expect("find the deposit account");
     assert_eq!(found.contract_id, account.contract_id);
 
-    // The extra args name the instrument configuration and the registrar's
-    // credentials. The mint reads both.
+    // The extra args name the instrument configuration. The issuer
+    // credential list stays empty, as in the burn, because the CBTC Daml
+    // does not require one.
     let context = json!({
         "values": {
             "utility.digitalasset.com/instrument-configuration":
                 {"tag": "AV_ContractId", "value": fixture.instrument_configuration.contract_id},
-            "utility.digitalasset.com/issuer-credentials":
-                {"tag": "AV_List", "value": fixture.issuer_credentials.iter()
-                    .map(|c| json!({"tag": "AV_ContractId", "value": c.contract_id}))
-                    .collect::<Vec<_>>()},
+            "utility.digitalasset.com/issuer-credentials": {"tag": "AV_List", "value": []},
         }
     });
     let block = account.last_processed_block + 1;

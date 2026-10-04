@@ -42,13 +42,13 @@ pub struct AccountContractRuleSet<A> {
     _asset: PhantomData<A>,
 }
 
-/// The utility contracts a burn discloses. BETH has no issuer credential.
+/// The utility contracts a burn discloses. The API's deprecated
+/// `issuer_credential` field is not read, because no burn needs it.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(bound = "")]
 pub struct TokenStandardContracts<A> {
     pub burn_mint_factory: ContractInfo,
     pub instrument_configuration: ContractInfo,
-    pub issuer_credential: Option<ContractInfo>,
     #[serde(skip)]
     _asset: PhantomData<A>,
 }
@@ -98,17 +98,19 @@ mod tests {
     }
 
     #[test]
-    fn token_standard_contracts_accept_a_missing_issuer_credential() {
+    /// Today's API still sends the deprecated `issuer_credential`; the next
+    /// version drops it. Both shapes must parse.
+    fn token_standard_contracts_parse_with_and_without_the_deprecated_issuer_credential() {
         let with: TokenStandardContracts<Asset> = serde_json::from_value(json!({
             "burn_mint_factory": info("f"), "instrument_configuration": info("c"), "issuer_credential": info("i"),
         }))
         .unwrap();
-        assert_eq!(with.issuer_credential.unwrap().contract_id, "00i");
+        assert_eq!(with.burn_mint_factory.contract_id, "00f");
         let without: TokenStandardContracts<Asset> = serde_json::from_value(json!({
             "burn_mint_factory": info("f"), "instrument_configuration": info("c"),
         }))
         .unwrap();
-        assert!(without.issuer_credential.is_none());
+        assert_eq!(without.instrument_configuration.contract_id, "00c");
     }
 
     #[test]
