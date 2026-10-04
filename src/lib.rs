@@ -15,6 +15,8 @@ pub(crate) mod kits;
 pub mod tokens;
 
 #[cfg(test)]
+mod localnet;
+#[cfg(test)]
 mod test_fixtures;
 
 /// The parameter types the Token Standard operations take.

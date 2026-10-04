@@ -1,0 +1,18 @@
+# A Canton sandbox image with the CBTC and BETH stacks bootstrapped. Its
+# bootstrap runs unchanged; the localnet suite adds its own test registrar on
+# top.
+services:
+  canton:
+    image: public.ecr.aws/dlc-link/canton-sandbox:cbtc-4ee9822
+    ports:
+      - "7575:7575"
+    healthcheck:
+      # The healthcheck waits until participant3 lists beth-network, which the
+      # bootstrap maps after everything the CBTC suite needs.
+      # A few BETH steps still run for about 10 more seconds.
+      # The image has wget, not curl.
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:7577/v2/parties | grep -q beth-network"]
+      interval: 10s
+      timeout: 5s
+      start_period: 60s
+      retries: 90

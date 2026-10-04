@@ -28,6 +28,7 @@ token = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.9.0" }
 uuid = { version = "1.18", features = ["v4"] }
 
 [dev-dependencies]
+canton-api-client = { version = "3.6.0-0.1.0" }
 chrono = { version = "0.4.42" }
 csv = { version = "1.3" }
 dotenvy = { version = "0.15" }
