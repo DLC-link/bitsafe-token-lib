@@ -95,7 +95,6 @@ impl Ledger {
     }
 
     /// Exercises one choice as `act_as`, with `disclosed` disclosed.
-    #[expect(dead_code, reason = "the CBTC phases after the fixture call it")]
     pub(crate) async fn exercise(
         &self,
         act_as: &[&str],
@@ -153,7 +152,6 @@ impl Ledger {
 }
 
 /// A contract the suite discloses, in the shape `ContractInfo` carries.
-#[expect(dead_code, reason = "the CBTC phases after the fixture call it")]
 pub(crate) fn contract_info(contract: &JsActiveContract) -> ContractInfo {
     let created = &contract.created_event;
     ContractInfo {
