@@ -17,7 +17,7 @@ use crate::kits::{bitsafe_api::ContractInfo, canton};
 /// The user every submission names. The sandbox runs without auth, so no
 /// token carries a user id, and the ledger rejects a submission without one.
 /// The ledger accepts any user id here; the user need not exist.
-const USER_ID: &str = "localnet-suite";
+pub(crate) const USER_ID: &str = "localnet-suite";
 
 /// The sandbox's participant1, as the suite talks to it.
 pub(crate) struct Ledger {

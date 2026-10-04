@@ -16,7 +16,7 @@ use crate::{
         bitsafe_api::{AccountContractRuleSet, ContractInfo, TokenStandardContracts},
         canton::create_args,
     },
-    localnet::ledger::{Ledger, contract_info, created_cid},
+    localnet::ledger::{Ledger, USER_ID, contract_info, created_cid},
     tokens::cbtc::TICKER,
 };
 
@@ -88,6 +88,9 @@ impl Fixture {
     /// only member. Then the registrar builds the CBTC utility stack and
     /// the CBTC rules.
     pub(crate) async fn new() -> Result<Fixture, String> {
+        // The library's own writes send this user id. A second `set` fails,
+        // and the value is the same, so the result does not matter.
+        let _ = crate::kits::canton::TEST_USER_ID.set(USER_ID.to_string());
         let ledger = Ledger::from_env();
         let operator = ledger.party("operator").await?;
         let dso = ledger.party("dso").await?;

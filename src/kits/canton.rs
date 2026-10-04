@@ -97,6 +97,22 @@ pub(crate) struct Exercise<'a> {
     pub disclosed: Vec<DisclosedContract>,
 }
 
+/// The user id the localnet suite sends with each submission. The localnet
+/// sandbox runs without login, so it reads the user id from the request body.
+/// Production reads the user from the access token instead.
+#[cfg(test)]
+pub(crate) static TEST_USER_ID: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+
+#[cfg(test)]
+fn submission_user_id() -> Option<String> {
+    TEST_USER_ID.get().cloned()
+}
+
+#[cfg(not(test))]
+fn submission_user_id() -> Option<String> {
+    None
+}
+
 /// Exercises one choice as `party` and waits for the transaction.
 pub(crate) async fn exercise(
     ledger_host: &str,
@@ -118,6 +134,7 @@ pub(crate) async fn exercise(
         command_id: format!("cmd-{}", uuid::Uuid::new_v4()),
         disclosed_contracts: command.disclosed,
         commands: vec![submission::Command::ExerciseCommand(exercise_command)],
+        user_id: submission_user_id(),
         ..Default::default()
     };
     let raw = submit::wait_for_transaction(submit::Params {

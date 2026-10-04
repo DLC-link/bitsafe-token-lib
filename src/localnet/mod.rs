@@ -6,4 +6,5 @@
 
 mod cbtc;
 mod fixture;
+mod governance;
 mod ledger;
