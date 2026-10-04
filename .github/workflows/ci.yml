@@ -27,6 +27,27 @@ jobs:
       - name: cargo test
         run: cargo test
 
+  localnet:
+    name: Localnet suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      # rust-toolchain.toml pins the channel; rustup reads it on first use.
+      - name: Install toolchain
+        run: rustup show
+      - uses: Swatinem/rust-cache@v2
+      - name: Start the sandbox
+        run: docker compose -f localnet/docker-compose.yml up -d --wait
+      - name: Run the localnet suite
+        run: cargo test --lib localnet -- --ignored --nocapture --test-threads=1
+      - name: Show the sandbox log on failure
+        if: failure()
+        run: docker compose -f localnet/docker-compose.yml logs --tail 300
+      - name: Stop the sandbox
+        if: always()
+        run: docker compose -f localnet/docker-compose.yml down -v
+
   cargo-deny:
     name: Cargo Deny
     runs-on: ubuntu-latest

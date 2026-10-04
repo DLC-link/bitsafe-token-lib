@@ -37,6 +37,21 @@ cargo test
 The dependency rule: `tokens` may use `flows` and `kits`, `flows` may use
 `kits`, and nothing imports upward. Review checks it.
 
+## Localnet suite
+
+The localnet suite runs the CBTC credentials, mint and redeem flows against a
+local Canton sandbox. It needs Docker. Two commands start the sandbox and run
+the suite:
+
+```sh
+docker compose -f localnet/docker-compose.yml up -d --wait
+cargo test --lib localnet -- --ignored --nocapture --test-threads=1
+```
+
+The first pull of the sandbox image takes several minutes. The sandbox then
+needs a few more minutes to bootstrap. Each run allocates fresh parties, so a
+rerun against a running sandbox works.
+
 ## License
 
 Apache-2.0
