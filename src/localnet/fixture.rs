@@ -63,13 +63,11 @@ pub(crate) struct Fixture {
     /// The fresh plain party that plays the CBTC registrar.
     pub(crate) registrar: String,
     /// The fresh party that owns the accounts and holdings.
-    #[expect(dead_code, reason = "the CBTC phases after the fixture read it")]
     pub(crate) user: String,
     /// The one-member governance body of `registrar`.
     pub(crate) governance_rules: String,
     /// The registrar's user service. The registrar offers credentials
     /// through it.
-    #[expect(dead_code, reason = "the CBTC phases after the fixture read it")]
     pub(crate) user_service: String,
     /// The registrar's credentials: the provider credential from the
     /// operator first, the registrar credential it issued itself second.
@@ -368,6 +366,48 @@ impl Fixture {
             "issuer_credential": self.issuer_credentials[1],
         }))
         .expect("token standard contracts")
+    }
+
+    /// The registrar offers the test user the claim `hasCBTCRole = Minter`
+    /// through its user service. Returns the cid of the credential offer.
+    pub(crate) async fn offer_minter_credential(&self) -> Result<String, String> {
+        let response = self
+            .ledger
+            .exercise(
+                &[&self.registrar],
+                USER_SERVICE,
+                &self.user_service,
+                "UserService_OfferFreeCredential",
+                json!({
+                    "holder": self.user,
+                    "id": "localnet-minter-credential",
+                    "description": "localnet CBTC minter",
+                    "claims": [{
+                        "subject": self.user,
+                        "property": "hasCBTCRole",
+                        "value": "Minter",
+                    }],
+                }),
+                &[],
+            )
+            .await?;
+        created_cid(&response, CREDENTIAL_OFFER)
+    }
+
+    /// The test user accepts a credential offer. The user has no user service,
+    /// so the offer's own free-accept choice is the way in.
+    pub(crate) async fn accept_offer(&self, offer_cid: &str) -> Result<(), String> {
+        self.ledger
+            .exercise(
+                &[&self.user],
+                CREDENTIAL_OFFER,
+                offer_cid,
+                "CredentialOffer_AcceptFree",
+                json!({}),
+                &[],
+            )
+            .await
+            .map(|_| ())
     }
 
     /// The CBTC instrument of the test registrar.
