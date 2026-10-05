@@ -37,7 +37,14 @@ jobs:
       - name: Install toolchain
         run: rustup show
       - uses: Swatinem/rust-cache@v2
+      # The sandbox needs a few minutes to bootstrap. Start it without
+      # waiting, build the tests meanwhile, and then wait for the
+      # healthcheck. A compile error fails the job before the wait.
       - name: Start the sandbox
+        run: docker compose -f localnet/docker-compose.yml up -d
+      - name: Build the tests
+        run: cargo test --lib --no-run
+      - name: Wait for the sandbox
         run: docker compose -f localnet/docker-compose.yml up -d --wait
       - name: Run the localnet suite
         run: cargo test --lib localnet -- --ignored --nocapture --test-threads=1
