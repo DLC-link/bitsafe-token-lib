@@ -374,6 +374,32 @@ mod tests {
     }
 
     #[test]
+    fn client_config_binds_the_beth_instrument_and_registry_of_the_network() {
+        let keycloak = KeycloakConfig {
+            client_id: "client".to_string(),
+            username: "user".to_string(),
+            password: "secret".to_string(),
+            url: "https://keycloak.example/token".to_string(),
+        };
+        let config = client_config(
+            Network::Testnet,
+            "https://ledger.example".to_string(),
+            "alice::1220".to_string(),
+            keycloak,
+            TokenStandardVersion::V2,
+        );
+        assert_eq!(config.ledger_host, "https://ledger.example");
+        assert_eq!(config.registry_url, Network::Testnet.registry_url());
+        assert_eq!(config.instrument, instrument(Network::Testnet));
+        assert_eq!(config.party, "alice::1220");
+        assert_eq!(config.keycloak.client_id, "client");
+        assert_eq!(config.keycloak.username, "user");
+        assert_eq!(config.keycloak.password, "secret");
+        assert_eq!(config.keycloak.url, "https://keycloak.example/token");
+        assert_eq!(config.version, TokenStandardVersion::V2);
+    }
+
+    #[test]
     fn info_maps_each_registrar_back_to_its_network() {
         for network in Network::ALL {
             assert_eq!(INFO.network_of(registrar(network)), Some(network));
