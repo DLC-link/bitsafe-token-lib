@@ -117,7 +117,7 @@ Complete flow for redeeming CBTC back to BTC:
 cargo run --example cbtc_redeem_flow
 ```
 
-Creates a withdraw account and submits a withdrawal. `submit_withdraw` checks the caller, the credentials, the transaction limits, the account's pending balance and the holdings before it sends anything. Requires a Minter credential and CBTC balance.
+Finds the withdraw account that pays out to `DESTINATION_BTC_ADDRESS`, or creates one, and submits a withdrawal. `DESTINATION_BTC_ADDRESS` has no default. `submit_withdraw` checks the caller, the credentials, the transaction limits, the account's pending balance and the holdings before it sends anything. Requires a Minter credential and CBTC balance.
 
 ### List Withdraw Accounts
 
@@ -644,7 +644,7 @@ Optional overrides, for a custom network. An empty value counts as unset:
 
 Mint and redeem:
 
-- `DESTINATION_BTC_ADDRESS` - Payout address for `cbtc_redeem_flow`
+- `DESTINATION_BTC_ADDRESS` - Payout address for `cbtc_redeem_flow`. It has no default.
 - `DESTINATION_ETH_ADDRESS` - Payout address for `beth_redeem_flow`. It has no default.
 - `DEPOSIT_AMOUNT_WEI` - The deposit `beth_mint_flow` builds, in wei (default: `10000000000000000`, 0.01 ETH)
 - `WITHDRAW_AMOUNT` - Amount to burn, in the asset's unit (default: `0.001` for `cbtc_redeem_flow`, `0.01` for `beth_redeem_flow`)

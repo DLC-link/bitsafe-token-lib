@@ -10,19 +10,22 @@ use bitsafe_token::tokens::cbtc::redeem::{
 ///
 /// 1. Authenticate with Keycloak
 /// 2. Get account rules from the attestor network
-/// 3. Create a withdraw account on Canton with destination BTC address
+/// 3. Find the withdraw account for DESTINATION_BTC_ADDRESS, or create one
 /// 4. List existing CBTC holdings
 /// 5. Submit withdrawal (burn CBTC and increase pending balance)
 /// 6. Verify the withdrawal was submitted successfully
 ///
-/// WITHDRAW_AMOUNT sets the amount to burn. The default is 0.001.
+/// DESTINATION_BTC_ADDRESS sets the Bitcoin address that receives the BTC.
+/// It has no default. WITHDRAW_AMOUNT sets the amount to burn. The default
+/// is 0.001.
 ///
 /// Note: WithdrawRequests are NOT created atomically with the withdrawal submission.
 /// The attestor network will create WithdrawRequests later. Use the separate
 /// `cbtc_check_withdraw_requests` example to monitor for processed withdrawals.
 ///
 /// To run this example:
-/// 1. Make sure you have .env configured with your credentials
+/// 1. Make sure you have .env configured with your credentials and
+///    DESTINATION_BTC_ADDRESS
 /// 2. Make sure you have CBTC holdings (run cbtc_mint_flow first)
 /// 3. cargo run --example cbtc_redeem_flow
 use keycloak::login::{PasswordParams, password, token_url};
@@ -37,6 +40,12 @@ async fn main() -> Result<(), String> {
     env_logger::init();
 
     println!("=== CBTC Redeeming (Withdrawal) Flow Example ===\n");
+
+    // Read the destination first: a missing value stops the run before it
+    // logs in. There is no default address, because a default would send
+    // the payout to an address the person did not choose.
+    let destination_btc_address = shared::non_blank("DESTINATION_BTC_ADDRESS")
+        .ok_or("Set DESTINATION_BTC_ADDRESS to the Bitcoin address that receives the BTC")?;
 
     // Step 1: Authenticate with Keycloak
     println!("Step 1: Authenticating with Keycloak...");
@@ -117,10 +126,6 @@ async fn main() -> Result<(), String> {
     );
     println!();
 
-    // Step 5: Create a new withdraw account (or skip if one already exists)
-    // For production, you should provide a real Bitcoin address via DESTINATION_BTC_ADDRESS env var
-    // For testing/devnet, we use a test address
-
     // Step 4b: Fetch Minter credentials
     println!("Step 4b: Fetching Minter credentials...");
     let credentials = bitsafe_token::credentials::list_credentials(ListCredentialsParams {
@@ -140,52 +145,45 @@ async fn main() -> Result<(), String> {
         minter_credential_cids.len()
     );
 
-    if !accounts.is_empty() {
-        println!("Step 5: Withdraw account already exists, skipping creation...");
-        println!("  Using existing account: {}", accounts[0].contract_id);
-        println!("  Destination: {}\n", accounts[0].destination_address);
-    } else {
-        let destination_btc_address = env::var("DESTINATION_BTC_ADDRESS")
-            .unwrap_or_else(|_| "bcrt1qexamplewithdrawaddressfortestingonly00000000".to_string());
+    // Step 5: Burn only into an account that pays out to
+    // DESTINATION_BTC_ADDRESS. The comparison is exact, because a legacy
+    // Bitcoin address is case-sensitive.
+    let existing = accounts
+        .into_iter()
+        .find(|account| account.destination_address == destination_btc_address);
+    let withdraw_account = match existing {
+        Some(account) => {
+            println!(
+                "Step 5: Using the existing withdraw account {} for {}\n",
+                account.contract_id, account.destination_address
+            );
+            account
+        }
+        None => {
+            println!("Step 5: Creating a new withdraw account...");
+            println!("  Destination BTC address: {}", destination_btc_address);
 
-        println!("Step 5: Creating a new withdraw account...");
-        println!("  Destination BTC address: {}", destination_btc_address);
+            let withdraw_account =
+                cbtc::redeem::create_withdraw_account(CreateWithdrawAccountParams {
+                    ledger_host: ledger_host.clone(),
+                    party: party_id.clone(),
+                    access_token: access_token.clone(),
+                    account_rules: account_rules.clone(),
+                    destination_address: destination_btc_address.clone(),
+                    credential_cids: minter_credential_cids.clone(),
+                })
+                .await?;
 
-        let withdraw_account = cbtc::redeem::create_withdraw_account(CreateWithdrawAccountParams {
-            ledger_host: ledger_host.clone(),
-            party: party_id.clone(),
-            access_token: access_token.clone(),
-            account_rules: account_rules.clone(),
-            destination_address: destination_btc_address.clone(),
-            credential_cids: minter_credential_cids.clone(),
-        })
-        .await?;
-
-        println!("✓ Withdraw account created successfully!");
-        println!("  - Contract ID: {}", withdraw_account.contract_id);
-        println!("  - Owner: {}", withdraw_account.owner);
-        println!(
-            "  - Destination BTC Address: {}",
-            withdraw_account.destination_address
-        );
-        println!();
-    }
-
-    // Use the first account (either existing or newly created)
-    let withdraw_account = if accounts.is_empty() {
-        // Fetch the newly created account
-        let updated_accounts = cbtc::redeem::list_withdraw_accounts(ListWithdrawAccountsParams {
-            ledger_host: ledger_host.clone(),
-            party: party_id.clone(),
-            access_token: access_token.clone(),
-        })
-        .await?;
-        updated_accounts
-            .into_iter()
-            .next()
-            .ok_or("Failed to find newly created withdraw account")?
-    } else {
-        accounts[0].clone()
+            println!("✓ Withdraw account created successfully!");
+            println!("  - Contract ID: {}", withdraw_account.contract_id);
+            println!("  - Owner: {}", withdraw_account.owner);
+            println!(
+                "  - Destination BTC Address: {}",
+                withdraw_account.destination_address
+            );
+            println!();
+            withdraw_account
+        }
     };
 
     // Step 6: Submit withdrawal (burn CBTC)
