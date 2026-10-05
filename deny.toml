@@ -8,4 +8,6 @@
 # feature: cargo-deny already skips it.
 
 [advisories]
-ignore = []
+ignore = [
+    { id = "RUSTSEC-2024-0436", reason = "paste is unmaintained and archived, and no safe upgrade exists. It is a compile-time proc-macro that alloy-primitives and syn-solidity (through alloy-sol-types) depend on directly, so no feature switch removes it. The ignore becomes unsafe if paste ships runtime code, and it is obsolete once alloy moves to a maintained fork such as pastey." },
+]
