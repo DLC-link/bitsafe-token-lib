@@ -12,7 +12,8 @@ pub struct AssetInfo {
     pub registrar: fn(Network) -> &'static str,
     /// The credential claim the account and burn choices require.
     pub minter_claim: (&'static str, &'static str),
-    /// The DAR directories `check_dars` compares, dependencies first.
+    /// The DAR directories `check_dars` compares, dependencies first. Each
+    /// is relative to the folder that holds this repository's `dars/`.
     pub dar_dirs: &'static [&'static str],
 }
 

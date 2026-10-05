@@ -8,6 +8,8 @@ mod network;
 pub use network::{Network, ParseNetworkError};
 mod asset;
 pub use asset::AssetInfo;
+mod dars;
+pub use dars::check_dars;
 
 pub(crate) mod flows;
 pub(crate) mod kits;
