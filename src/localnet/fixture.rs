@@ -3,9 +3,12 @@
 //!
 //! The registrar is a plain party. It builds the same utility stack that the
 //! sandbox bootstrap builds for BETH: a provider service, a user service, a
-//! provider credential and a registrar credential, a registrar service with
-//! its allocation factory, and the CBTC instrument configuration. It also
-//! creates the CBTC deposit and withdraw rules.
+//! provider credential and a registrar credential, and a registrar service
+//! with its allocation factory. That part is shared by every asset. Each
+//! asset then adds its own instrument configuration and rules, as an
+//! `AssetStack`.
+
+use std::marker::PhantomData;
 
 use serde_json::json;
 
@@ -17,7 +20,6 @@ use crate::{
         canton::create_args,
     },
     localnet::ledger::{Ledger, USER_ID, contract_info, created_cid},
-    tokens::cbtc::TICKER,
 };
 
 pub(crate) const GOVERNANCE_RULES: &str = "#governance-core-v1:Governance.Rules:GovernanceRules";
@@ -45,22 +47,11 @@ const USER_SERVICE: &str =
 const CREDENTIAL_OFFER: &str =
     "#utility-credential-app-v0:Utility.Credential.App.V0.Model.Offer:CredentialOffer";
 const CREDENTIAL: &str = "#utility-credential-v0:Utility.Credential.V0.Credential:Credential";
-const DEPOSIT_RULES: &str = "#cbtc:CBTC.DepositAccount:CBTCDepositAccountRules";
-const WITHDRAW_RULES: &str = "#cbtc:CBTC.WithdrawAccount:CBTCWithdrawAccountRules";
 
+/// The parties and the asset-neutral contracts of one suite run.
 pub(crate) struct Fixture {
     pub(crate) ledger: Ledger,
-    #[expect(
-        dead_code,
-        reason = "the BETH localnet suite reads it; the CBTC phases do not"
-    )]
-    pub(crate) operator: String,
-    #[expect(
-        dead_code,
-        reason = "the BETH localnet suite reads it; the CBTC phases do not"
-    )]
-    pub(crate) dso: String,
-    /// The fresh plain party that plays the CBTC registrar.
+    /// The fresh plain party that plays the registrar of every asset.
     pub(crate) registrar: String,
     /// The fresh party that owns the accounts and holdings.
     pub(crate) user: String,
@@ -69,21 +60,28 @@ pub(crate) struct Fixture {
     /// The registrar's user service. The registrar offers credentials
     /// through it.
     pub(crate) user_service: String,
-    /// The registrar's allocation factory, which mints and burns CBTC.
+    /// The registrar's registrar service, which configures instruments.
+    registrar_service: String,
+    /// The registrar's allocation factory, which mints and burns every
+    /// instrument the registrar configures.
     pub(crate) allocation_factory: ContractInfo,
-    /// The CBTC instrument configuration.
+    operator: String,
+}
+
+/// The contracts of one asset: its instrument configuration and its rules.
+pub(crate) struct AssetStack<A> {
     pub(crate) instrument_configuration: ContractInfo,
-    /// The CBTC deposit account rules.
     pub(crate) deposit_rules: ContractInfo,
-    /// The CBTC withdraw account rules.
     pub(crate) withdraw_rules: ContractInfo,
+    allocation_factory: ContractInfo,
+    registrar: String,
+    _asset: PhantomData<A>,
 }
 
 impl Fixture {
     /// Finds the sandbox's operator and dso, allocates a fresh registrar and
     /// user, and gives the registrar a governance body with itself as the
-    /// only member. Then the registrar builds the CBTC utility stack and
-    /// the CBTC rules.
+    /// only member. Then the registrar builds the shared utility stack.
     pub(crate) async fn new() -> Result<Fixture, String> {
         // The library's own writes send this user id. A second `set` fails,
         // and the value is the same, so the result does not matter.
@@ -250,7 +248,7 @@ impl Fixture {
         let registrar_credential = created_cid(&response, CREDENTIAL)?;
 
         // The registrar opens its registrar service, which creates the
-        // allocation factory, and configures the CBTC instrument.
+        // allocation factory.
         let registrar_service_request = ledger
             .create(
                 &[r],
@@ -282,17 +280,36 @@ impl Fixture {
             .await?;
         let registrar_service = created_cid(&response, REGISTRAR_SERVICE)?;
         let allocation_factory = created_cid(&response, ALLOCATION_FACTORY)?;
-        let response = ledger
+        let allocation_factory =
+            read_back(&ledger, r, ALLOCATION_FACTORY, &allocation_factory).await?;
+        Ok(Fixture {
+            ledger,
+            registrar,
+            user,
+            governance_rules,
+            user_service,
+            registrar_service,
+            allocation_factory,
+            operator,
+        })
+    }
+
+    /// The registrar configures the instrument of asset `A` and creates its
+    /// deposit and withdraw rules.
+    pub(crate) async fn asset_stack<A: CantonBridgeV1>(&self) -> Result<AssetStack<A>, String> {
+        let r = self.registrar.as_str();
+        let response = self
+            .ledger
             .exercise(
                 &[r],
                 REGISTRAR_SERVICE,
-                &registrar_service,
+                &self.registrar_service,
                 "RegistrarService_CreateInstrumentConfiguration",
                 json!({
-                    "instrumentId": TICKER,
+                    "instrumentId": A::TICKER,
                     "additionalIdentifiers": [{
                         "source": r,
-                        "id": TICKER,
+                        "id": A::TICKER,
                         "scheme": "RegistrarInternalScheme",
                     }],
                     "issuerRequirements": [],
@@ -302,65 +319,43 @@ impl Fixture {
             )
             .await?;
         let instrument_configuration = created_cid(&response, INSTRUMENT_CONFIGURATION)?;
-
-        // The registrar creates the CBTC rules.
         let rules = json!({
             "registrar": r,
-            "operator": o,
-            "instrument": {"admin": r, "id": TICKER},
+            "operator": self.operator,
+            "instrument": {"admin": r, "id": A::TICKER},
         });
-        let deposit_rules = ledger.create(&[r], DEPOSIT_RULES, rules.clone()).await?;
-        let withdraw_rules = ledger.create(&[r], WITHDRAW_RULES, rules).await?;
-
-        let allocation_factory =
-            read_back(&ledger, r, ALLOCATION_FACTORY, &allocation_factory).await?;
-        let instrument_configuration = read_back(
-            &ledger,
-            r,
-            INSTRUMENT_CONFIGURATION,
-            &instrument_configuration,
-        )
-        .await?;
-        let deposit_rules = read_back(&ledger, r, DEPOSIT_RULES, &deposit_rules).await?;
-        let withdraw_rules = read_back(&ledger, r, WITHDRAW_RULES, &withdraw_rules).await?;
-        Ok(Fixture {
-            ledger,
-            operator,
-            dso,
-            registrar,
-            user,
-            governance_rules,
-            user_service,
-            allocation_factory,
-            instrument_configuration,
-            deposit_rules,
-            withdraw_rules,
+        let deposit_rules = self
+            .ledger
+            .create(&[r], A::DEPOSIT_ACCOUNT_RULES, rules.clone())
+            .await?;
+        let withdraw_rules = self
+            .ledger
+            .create(&[r], A::WITHDRAW_ACCOUNT_RULES, rules)
+            .await?;
+        Ok(AssetStack {
+            instrument_configuration: read_back(
+                &self.ledger,
+                r,
+                INSTRUMENT_CONFIGURATION,
+                &instrument_configuration,
+            )
+            .await?,
+            deposit_rules: read_back(&self.ledger, r, A::DEPOSIT_ACCOUNT_RULES, &deposit_rules)
+                .await?,
+            withdraw_rules: read_back(&self.ledger, r, A::WITHDRAW_ACCOUNT_RULES, &withdraw_rules)
+                .await?,
+            allocation_factory: self.allocation_factory.clone(),
+            registrar: self.registrar.clone(),
+            _asset: PhantomData,
         })
     }
 
-    /// The registrar's CBTC rules as the typed model the flows take.
-    pub(crate) fn account_rules<A: CantonBridgeV1>(&self) -> AccountContractRuleSet<A> {
-        // The model's asset marker is private to its module, so the model
-        // comes from JSON.
-        serde_json::from_value(json!({
-            "da_rules": self.deposit_rules,
-            "wa_rules": self.withdraw_rules,
-        }))
-        .expect("rules")
-    }
-
-    /// The registrar's utility contracts as the typed model the flows take.
-    pub(crate) fn token_standard_contracts<A: CantonBridgeV1>(&self) -> TokenStandardContracts<A> {
-        serde_json::from_value(json!({
-            "burn_mint_factory": self.allocation_factory,
-            "instrument_configuration": self.instrument_configuration,
-        }))
-        .expect("token standard contracts")
-    }
-
-    /// The registrar offers the test user the claim `hasCBTCRole = Minter`
+    /// The registrar offers the test user the Minter claim of asset `A`
     /// through its user service. Returns the cid of the credential offer.
-    pub(crate) async fn offer_minter_credential(&self) -> Result<String, String> {
+    pub(crate) async fn offer_minter_credential<A: CantonBridgeV1>(
+        &self,
+    ) -> Result<String, String> {
+        let (property, value) = A::MINTER_CLAIM;
         let response = self
             .ledger
             .exercise(
@@ -370,13 +365,9 @@ impl Fixture {
                 "UserService_OfferFreeCredential",
                 json!({
                     "holder": self.user,
-                    "id": "localnet-minter-credential",
-                    "description": "localnet CBTC minter",
-                    "claims": [{
-                        "subject": self.user,
-                        "property": "hasCBTCRole",
-                        "value": "Minter",
-                    }],
+                    "id": format!("localnet-{}-minter-credential", A::API_PATH),
+                    "description": format!("localnet {} minter", A::TICKER),
+                    "claims": [{"subject": self.user, "property": property, "value": value}],
                 }),
                 &[],
             )
@@ -399,12 +390,35 @@ impl Fixture {
             .await
             .map(|_| ())
     }
+}
 
-    /// The CBTC instrument of the test registrar.
+impl<A: CantonBridgeV1> AssetStack<A> {
+    /// The asset's rules as the typed model the flows take.
+    pub(crate) fn account_rules(&self) -> AccountContractRuleSet<A> {
+        // The model's asset marker is private to its module, so the model
+        // comes from JSON.
+        serde_json::from_value(json!({
+            "da_rules": self.deposit_rules,
+            "wa_rules": self.withdraw_rules,
+        }))
+        .expect("rules")
+    }
+
+    /// The registrar's utility contracts for this asset, as the typed model
+    /// the burn takes.
+    pub(crate) fn token_standard_contracts(&self) -> TokenStandardContracts<A> {
+        serde_json::from_value(json!({
+            "burn_mint_factory": self.allocation_factory,
+            "instrument_configuration": self.instrument_configuration,
+        }))
+        .expect("token standard contracts")
+    }
+
+    /// The asset's instrument, with the test registrar as its admin.
     pub(crate) fn instrument(&self) -> InstrumentId {
         InstrumentId {
             admin: self.registrar.clone(),
-            id: TICKER.to_string(),
+            id: A::TICKER.to_string(),
         }
     }
 }
