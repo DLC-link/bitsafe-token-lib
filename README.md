@@ -24,7 +24,10 @@ to its own registrar party.
 - `tokens::<asset>`: the whole asset-facing API. One module per asset.
 - `kits`, `flows`: crate-private building blocks. They never appear in a
   public path.
-- The crate root: the `canton-lib` re-exports, `Network`, `AssetInfo`.
+- The crate root: the `canton-lib` re-exports, `Network`, `AssetInfo`,
+  `check_dars`.
+- `dars/`: the DAR packages a participant needs for each asset, and the
+  script that uploads them. See [`dars/README.md`](dars/README.md).
 
 ## Development
 
