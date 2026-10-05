@@ -71,4 +71,8 @@ jobs:
         run: rustup show
       - uses: Swatinem/rust-cache@v2
       - name: Check the deployed BitSafe API shapes
+        # Devnet and testnet do not serve the BETH routes yet. Remove a
+        # network from the list when its deployment serves them.
+        env:
+          BETH_LIVE_API_SKIP: devnet,testnet
         run: cargo test --lib live_api -- --ignored
