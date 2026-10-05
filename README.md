@@ -42,9 +42,10 @@ The dependency rule: `tokens` may use `flows` and `kits`, `flows` may use
 
 ## Localnet suite
 
-The localnet suite runs the CBTC and then the BETH credentials, mint and
-redeem flows against a local Canton sandbox. It needs Docker. Two commands
-start the sandbox and run the suite:
+The localnet suite checks that a local Canton sandbox holds each asset's DAR
+packages. It then runs the CBTC and then the BETH credentials, mint and
+redeem flows against the sandbox. It needs Docker. Two commands start the
+sandbox and run the suite:
 
 ```sh
 docker compose -f localnet/docker-compose.yml up -d --wait
