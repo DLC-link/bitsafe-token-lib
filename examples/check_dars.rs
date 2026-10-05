@@ -1,7 +1,8 @@
-/// Example: Check DAR packages on participant
+/// Example: Check the ASSET token's DAR packages on participant
 ///
-/// Verifies that all required DAR packages are uploaded to the participant node
-/// by scanning the DAR files in cbtc-dars/ and comparing against the participant.
+/// Verifies that the participant node holds every DAR package the ASSET
+/// token needs, by scanning the asset's DAR folders under dars/ and comparing
+/// them against the participant.
 ///
 /// Run with: cargo run --example check_dars
 ///
@@ -9,13 +10,18 @@
 /// - KEYCLOAK_HOST, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID
 /// - KEYCLOAK_USERNAME, KEYCLOAK_PASSWORD
 /// - LEDGER_HOST
+/// - ASSET (cbtc or beth)
 use std::env;
+use std::path::Path;
 use std::process;
+mod shared;
 
 #[tokio::main]
 async fn main() {
     dotenvy::dotenv().ok();
     env_logger::init();
+
+    let asset = shared::asset();
 
     // Authenticate
     println!("Authenticating...");
@@ -38,25 +44,24 @@ async fn main() {
 
     let ledger_host = env::var("LEDGER_HOST").expect("LEDGER_HOST must be set");
 
-    println!("Checking DAR packages on participant...");
+    println!(
+        "Checking the {} DAR packages on participant...",
+        asset.ticker
+    );
     println!("  Ledger host: {}", ledger_host);
     println!();
 
-    let params = bitsafe_token::dar_check::Params {
+    let result = bitsafe_token::check_dars(
+        Path::new(env!("CARGO_MANIFEST_DIR")),
+        asset.dar_dirs,
         ledger_host,
-        access_token: auth.access_token,
-        dar_dirs: vec![
-            "cbtc-dars/dars/dependencies".to_string(),
-            "cbtc-dars/dars/cbtc".to_string(),
-        ],
-    };
-
-    let result = bitsafe_token::dar_check::check(params)
-        .await
-        .unwrap_or_else(|e| {
-            eprintln!("DAR check failed: {}", e);
-            process::exit(1);
-        });
+        auth.access_token,
+    )
+    .await
+    .unwrap_or_else(|e| {
+        eprintln!("DAR check failed: {}", e);
+        process::exit(1);
+    });
 
     // Print results
     println!(
@@ -77,8 +82,11 @@ async fn main() {
                 result.total_expected
             );
             println!();
-            for info in &result.missing {
-                println!("  {} v{} ({})", info.name, info.version, info.package_id);
+            for package in &result.missing {
+                println!(
+                    "  {} v{} ({})",
+                    package.name, package.version, package.package_id
+                );
             }
             println!();
             println!("Note: Missing packages may not yet be required for your environment.");
@@ -93,7 +101,11 @@ async fn main() {
             println!("                (select the tag matching your environment release)");
             println!("  Utility DARs: https://docs.digitalasset.com/utilities/releases/index.html");
             println!();
-            println!("To upload missing DARs to your participant: cbtc-dars/upload_dars.sh");
+            println!(
+                "To upload missing DARs to your participant: {} {}",
+                concat!(env!("CARGO_MANIFEST_DIR"), "/dars/upload_dars.sh"),
+                asset.ticker.to_ascii_lowercase()
+            );
             process::exit(1);
         }
     }

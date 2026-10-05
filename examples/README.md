@@ -40,7 +40,7 @@ example `cargo run --example cbtc_mint_flow`. The BETH bridge examples are in
 | `stream` | Send repeated transfers to one receiver |
 | `consolidate_utxos`, `consolidate_utxos_v2`, `split_holding_v2` | Merge or split holdings |
 | `batch_distribute`, `batch_distribute_v2`, `batch_with_callback`, `batch_with_callback_v2` | Distribute from a CSV file |
-| `check_dars` | Check the participant's DAR packages |
+| `check_dars` | Check that the participant holds the asset's DAR packages |
 
 | CBTC bridge example | What it does |
 |---|---|
@@ -75,17 +75,19 @@ This example checks for existing Minter credentials. If none are found, it looks
 
 ### Check DARs
 
-Verify that the participant node holds every DAR package the library needs:
+Verify that the participant node holds every DAR package that the `ASSET`
+token needs:
 
 ```bash
 cargo run --example check_dars
 ```
 
-The example scans the DAR files under `cbtc-dars/` and compares them against
-the packages uploaded to the participant. It exits non-zero when one is
-missing. It reads no registry and no BitSafe API, so it needs neither
-`ENVIRONMENT` nor `PARTY_ID`.
-This example needs the DAR files, which this repo adds in a later release under dars/; until then it finds no DARs.
+The example scans the DAR files in `dars/dependencies/` and in the asset's
+folder, `dars/cbtc/` or `dars/beth/`. It compares the newest package of each
+DAR with the packages uploaded to the participant, and it exits non-zero
+when one is missing. It reads no registry and no BitSafe API, so it needs
+neither `ENVIRONMENT` nor `PARTY_ID`. To upload the missing packages, see
+[`dars/README.md`](../dars/README.md).
 
 ### Mint CBTC Flow
 
@@ -629,13 +631,13 @@ Required for every example that touches a network:
 - `ENVIRONMENT` - `devnet`, `testnet` or `mainnet`, which supplies the
   registrar party, the registry URL and the BitSafe API URL.
 
-Required for every Token Standard example except `check_dars`:
+Required for every Token Standard example:
 
 - `ASSET` - The asset to work on: `cbtc` or `beth`.
 
-Three examples read neither `ENVIRONMENT` nor `ASSET` and need no network
-configuration: `check_dars`, `cbtc_list_withdraw_accounts` and
-`cbtc_check_withdraw_requests`.
+`check_dars` reads `ASSET` but not `ENVIRONMENT`. Two examples read neither
+`ENVIRONMENT` nor `ASSET` and need no network configuration:
+`cbtc_list_withdraw_accounts` and `cbtc_check_withdraw_requests`.
 
 Optional overrides, for a custom network. An empty value counts as unset:
 
