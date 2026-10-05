@@ -8,8 +8,9 @@ services:
       - "7575:7575"
     healthcheck:
       # The healthcheck waits until participant3 lists beth-network, which the
-      # bootstrap maps after everything the CBTC suite needs.
-      # A few BETH steps still run for about 10 more seconds.
+      # bootstrap maps after everything the suite needs: the DARs and the
+      # operator's services. The remaining bootstrap steps build beth-network's
+      # own stack, which the suite does not use.
       # The image has wget, not curl.
       test: ["CMD-SHELL", "wget -q -O - http://localhost:7577/v2/parties | grep -q beth-network"]
       interval: 10s

@@ -1,9 +1,10 @@
-//! The localnet integration suite. It runs the CBTC flows against canton's
-//! published sandbox image, with one fresh plain test registrar per run.
-//! Start the sandbox with `docker compose -f localnet/docker-compose.yml up
-//! -d --wait`, then run `cargo test --lib localnet -- --ignored --nocapture
-//! --test-threads=1`.
+//! The localnet integration suite. It runs the CBTC and then the BETH flows
+//! against canton's published sandbox image, with one fresh plain test
+//! registrar per run. Start the sandbox with `docker compose -f
+//! localnet/docker-compose.yml up -d --wait`, then run `cargo test --lib
+//! localnet -- --ignored --nocapture --test-threads=1`.
 
+mod beth;
 mod cbtc;
 mod fixture;
 mod governance;
@@ -28,6 +29,7 @@ async fn localnet_suite() {
     assert!(!fixture.allocation_factory.created_event_blob.is_empty());
 
     cbtc::run(&fixture).await;
+    beth::run(&fixture).await;
 
     // One registrar service configured one instrument per asset.
     let instrument_configs = fixture
@@ -35,5 +37,5 @@ async fn localnet_suite() {
         .active(&fixture.registrar, INSTRUMENT_CONFIGURATION)
         .await
         .expect("instrument configurations");
-    assert_eq!(instrument_configs.len(), 1);
+    assert_eq!(instrument_configs.len(), 2);
 }

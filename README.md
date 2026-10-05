@@ -39,9 +39,9 @@ The dependency rule: `tokens` may use `flows` and `kits`, `flows` may use
 
 ## Localnet suite
 
-The localnet suite runs the CBTC credentials, mint and redeem flows against a
-local Canton sandbox. It needs Docker. Two commands start the sandbox and run
-the suite:
+The localnet suite runs the CBTC and then the BETH credentials, mint and
+redeem flows against a local Canton sandbox. It needs Docker. Two commands
+start the sandbox and run the suite:
 
 ```sh
 docker compose -f localnet/docker-compose.yml up -d --wait
@@ -50,7 +50,14 @@ cargo test --lib localnet -- --ignored --nocapture --test-threads=1
 
 The first pull of the sandbox image takes several minutes. The sandbox then
 needs a few more minutes to bootstrap. Each run allocates fresh parties, so a
-rerun against a running sandbox works.
+rerun against a running sandbox works. The suite uses the JSON ledger API at
+`http://localhost:7575`; set `LOCALNET_LEDGER_HOST` to use another one.
+
+One command stops the sandbox and deletes its data:
+
+```sh
+docker compose -f localnet/docker-compose.yml down -v
+```
 
 ## License
 
