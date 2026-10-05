@@ -1,0 +1,149 @@
+use bitsafe_token::credentials::{
+    AcceptCredentialOfferParams, FindUserServiceParams, ListCredentialOffersParams,
+    ListCredentialsParams,
+};
+use bitsafe_token::tokens::beth;
+use keycloak::login::{PasswordParams, password, token_url};
+use std::env;
+#[path = "../shared.rs"]
+mod shared;
+
+#[tokio::main]
+async fn main() -> Result<(), String> {
+    dotenvy::dotenv().ok();
+    env_logger::init();
+
+    println!("=== BETH Credential Example ===\n");
+
+    // Step 1: Authenticate with Keycloak
+    println!("Step 1: Authenticating with Keycloak...");
+    let params = PasswordParams {
+        client_id: env::var("KEYCLOAK_CLIENT_ID").expect("KEYCLOAK_CLIENT_ID must be set"),
+        username: env::var("KEYCLOAK_USERNAME").expect("KEYCLOAK_USERNAME must be set"),
+        password: env::var("KEYCLOAK_PASSWORD").expect("KEYCLOAK_PASSWORD must be set"),
+        url: token_url(
+            &env::var("KEYCLOAK_HOST").expect("KEYCLOAK_HOST must be set"),
+            &env::var("KEYCLOAK_REALM").expect("KEYCLOAK_REALM must be set"),
+        ),
+    };
+    let login_response = password(params).await?;
+    println!("  Authenticated successfully\n");
+
+    let ledger_host = env::var("LEDGER_HOST").expect("LEDGER_HOST must be set");
+    let party_id = env::var("PARTY_ID").expect("PARTY_ID must be set");
+    let access_token = login_response.access_token.clone();
+
+    // Step 2: Check for existing credentials
+    println!("Step 2: Checking for existing credentials...");
+    let credentials = bitsafe_token::credentials::list_credentials(ListCredentialsParams {
+        ledger_host: ledger_host.clone(),
+        party: party_id.clone(),
+        access_token: access_token.clone(),
+    })
+    .await?;
+
+    // Filter for BETH Minter credentials
+    let minter_cids = beth::minter_credential_cids(shared::network(), &credentials);
+    let minter_credentials: Vec<_> = credentials
+        .iter()
+        .filter(|c| minter_cids.contains(&c.contract_id))
+        .collect();
+
+    if !minter_credentials.is_empty() {
+        println!("  Found {} Minter credential(s):", minter_credentials.len());
+        for cred in &minter_credentials {
+            println!("    - ID: {}, Contract: {}", cred.id, cred.contract_id);
+            println!("      Issuer: {}", cred.issuer);
+            for claim in &cred.claims {
+                println!(
+                    "      Claim: subject={}, property={}, value={}",
+                    claim.subject, claim.property, claim.value
+                );
+            }
+        }
+        println!();
+        println!("=== Example Complete ===");
+        println!(
+            "  Use credential CID {} in BETH operations.",
+            minter_credentials[0].contract_id
+        );
+        return Ok(());
+    }
+
+    println!("  No Minter credentials found.\n");
+
+    // Step 3: Check for pending credential offers
+    println!("Step 3: Checking for pending credential offers...");
+    let offers = bitsafe_token::credentials::list_credential_offers(ListCredentialOffersParams {
+        ledger_host: ledger_host.clone(),
+        party: party_id.clone(),
+        access_token: access_token.clone(),
+    })
+    .await?;
+
+    // Filter for BETH Minter offers
+    let minter_offers = beth::minter_credential_offers(shared::network(), &offers);
+
+    if minter_offers.is_empty() {
+        println!("  No BETH Minter credential offers found.");
+        println!(
+            "  The attestor network must offer you a Minter credential before you can accept one."
+        );
+        println!("  Contact your BETH operator to request credential issuance.");
+        return Ok(());
+    }
+
+    println!(
+        "  Found {} Minter credential offer(s):",
+        minter_offers.len()
+    );
+    for offer in &minter_offers {
+        println!("    - ID: {}, Contract: {}", offer.id, offer.contract_id);
+        println!("      Issuer: {}", offer.issuer);
+        println!("      Description: {}", offer.description);
+    }
+    println!();
+
+    // Step 4: Find UserService contract
+    println!("Step 4: Finding UserService contract...");
+    let user_service = bitsafe_token::credentials::find_user_service(FindUserServiceParams {
+        ledger_host: ledger_host.clone(),
+        party: party_id.clone(),
+        access_token: access_token.clone(),
+    })
+    .await?;
+    println!("  Found UserService: {}\n", user_service.contract_id);
+
+    // Step 5: Accept the first Minter offer
+    let offer = minter_offers[0];
+    println!("Step 5: Accepting credential offer '{}'...", offer.id);
+    let credential =
+        bitsafe_token::credentials::accept_credential_offer(AcceptCredentialOfferParams {
+            ledger_host: ledger_host.clone(),
+            party: party_id.clone(),
+            access_token: access_token.clone(),
+            user_service_contract_id: user_service.contract_id.clone(),
+            user_service_template_id: user_service.template_id.clone(),
+            credential_offer_cid: offer.contract_id.clone(),
+        })
+        .await?;
+
+    println!("  Credential accepted!");
+    println!("    Contract ID: {}", credential.contract_id);
+    println!("    ID: {}", credential.id);
+    for claim in &credential.claims {
+        println!(
+            "    Claim: subject={}, property={}, value={}",
+            claim.subject, claim.property, claim.value
+        );
+    }
+    println!();
+
+    println!("=== Example Complete ===");
+    println!(
+        "  Use credential CID {} in BETH operations (e.g., create_deposit_account, submit_withdraw).",
+        credential.contract_id
+    );
+
+    Ok(())
+}

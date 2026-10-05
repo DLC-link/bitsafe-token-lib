@@ -10,7 +10,7 @@
 ///
 /// Run with: cargo run --example stream
 ///
-/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// Set ASSET (cbtc or beth) and ENVIRONMENT (devnet, testnet or mainnet).
 /// examples/README.md lists the other variables.
 use std::env;
 use std::future::Future;

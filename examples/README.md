@@ -20,13 +20,14 @@ Run every example from the project root with `cargo run --example <name>`.
 
 **Token Standard examples** live in `examples/`. They work for any asset, and
 `ASSET` in your `.env` picks the asset. There is no default: an example that
-runs on the wrong asset reads a zero balance or sends the wrong token. Today
-the only value is `cbtc`.
+runs on the wrong asset reads a zero balance or sends the wrong token. The
+values are `cbtc` and `beth`.
 
 **Bridge examples** live per asset, in `examples/<asset>/`. They cover the
 mint and redeem flows of one asset and ignore `ASSET`. Cargo registers each
 one as `<asset>_<name>`. The CBTC bridge examples are in `examples/cbtc/`, for
-example `cargo run --example cbtc_mint_flow`.
+example `cargo run --example cbtc_mint_flow`. The BETH bridge examples are in
+`examples/beth/`.
 
 | Token Standard example | What it does |
 |---|---|
@@ -153,6 +154,34 @@ carries the Bitcoin transaction id of the payout, which `btc_tx_id()` returns.
 
 The example polls every five seconds and does not stop on its own. Press
 `Ctrl+C` to end it.
+
+### BETH Bridge Examples
+
+The BETH examples need a Minter credential issued by the BETH registrar.
+Run them in this order:
+
+1. **`beth_credentials`**: checks for a BETH Minter credential and accepts
+   a pending offer if there is one.
+2. **`beth_mint_flow`**: finds or creates a deposit account and prints the
+   `depositETH` transaction for `DEPOSIT_AMOUNT_WEI`.
+3. **`beth_redeem_flow`**: finds or creates a withdraw account for
+   `DESTINATION_ETH_ADDRESS`, burns `WITHDRAW_AMOUNT` BETH and lists the
+   withdraw requests.
+
+```bash
+cargo run --example beth_credentials
+cargo run --example beth_mint_flow
+cargo run --example beth_redeem_flow
+```
+
+`beth_mint_flow` sends nothing. You sign and send the printed transaction
+with your own Ethereum wallet on the printed chain. The attestors mint BETH
+after the deposit's block is finalized. An amount that is not a whole
+multiple of 100000000 wei fails before the example logs in. A zero amount,
+or an amount outside the deposit account's own limits, fails when the example
+builds the call, after it finds or creates the account. The library does not
+read the bridge's live `depositLimits()` or `paused()`; check both with your
+Ethereum provider before you send.
 
 ### Check Balance
 
@@ -602,7 +631,7 @@ Required for every example that touches a network:
 
 Required for every Token Standard example except `check_dars`:
 
-- `ASSET` - The asset to work on. Today: `cbtc`.
+- `ASSET` - The asset to work on: `cbtc` or `beth`.
 
 Three examples read neither `ENVIRONMENT` nor `ASSET` and need no network
 configuration: `check_dars`, `cbtc_list_withdraw_accounts` and
@@ -616,7 +645,9 @@ Optional overrides, for a custom network. An empty value counts as unset:
 Mint and redeem:
 
 - `DESTINATION_BTC_ADDRESS` - Payout address for `cbtc_redeem_flow`
-- `WITHDRAW_AMOUNT` - Amount to burn in `cbtc_redeem_flow` (default: `0.001`)
+- `DESTINATION_ETH_ADDRESS` - Payout address for `beth_redeem_flow`. It has no default.
+- `DEPOSIT_AMOUNT_WEI` - The deposit `beth_mint_flow` builds, in wei (default: `10000000000000000`, 0.01 ETH)
+- `WITHDRAW_AMOUNT` - Amount to burn, in the asset's unit (default: `0.001` for `cbtc_redeem_flow`, `0.01` for `beth_redeem_flow`)
 
 Transfers:
 

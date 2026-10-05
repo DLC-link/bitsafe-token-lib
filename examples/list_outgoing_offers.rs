@@ -5,7 +5,7 @@
 ///
 /// Run with: cargo run --example list_outgoing_offers
 ///
-/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// Set ASSET (cbtc or beth) and ENVIRONMENT (devnet, testnet or mainnet).
 /// examples/README.md lists the other variables.
 use std::env;
 mod shared;

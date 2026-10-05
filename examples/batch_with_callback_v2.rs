@@ -13,7 +13,7 @@
 /// V2 takes a `bitsafe_token::Account` for the sender and for each recipient, where
 /// V1 takes party strings.
 ///
-/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// Set ASSET (cbtc or beth) and ENVIRONMENT (devnet, testnet or mainnet).
 /// examples/README.md lists the other variables.
 use std::env;
 use std::fs::OpenOptions;

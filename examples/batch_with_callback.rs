@@ -7,7 +7,7 @@
 /// - Tracking progress in real-time
 /// - Implementing custom retry logic
 ///
-/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// Set ASSET (cbtc or beth) and ENVIRONMENT (devnet, testnet or mainnet).
 /// examples/README.md lists the other variables.
 use std::future::Future;
 use std::pin::Pin;

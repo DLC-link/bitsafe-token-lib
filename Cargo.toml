@@ -146,6 +146,18 @@ path = "examples/cbtc/list_withdraw_accounts.rs"
 name = "cbtc_check_withdraw_requests"
 path = "examples/cbtc/check_withdraw_requests.rs"
 
+[[example]]
+name = "beth_credentials"
+path = "examples/beth/credentials.rs"
+
+[[example]]
+name = "beth_mint_flow"
+path = "examples/beth/mint_flow.rs"
+
+[[example]]
+name = "beth_redeem_flow"
+path = "examples/beth/redeem_flow.rs"
+
 [profile.release]
 opt-level = 3
 strip = "debuginfo"

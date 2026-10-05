@@ -12,7 +12,7 @@
 /// - KEYCLOAK_USERNAME, KEYCLOAK_PASSWORD
 /// - LEDGER_HOST, PARTY_ID
 /// - ENVIRONMENT (devnet, testnet or mainnet)
-/// - ASSET (cbtc)
+/// - ASSET (cbtc or beth)
 ///
 /// Optional override: REGISTRAR_PARTY.
 ///

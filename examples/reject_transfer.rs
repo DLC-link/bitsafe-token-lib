@@ -17,7 +17,7 @@
 /// `RECEIVER_PARTY_ID` and this example rejects as it, so the sender must
 /// set `RECEIVER_PARTY_ID` to this receiver.
 ///
-/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// Set ASSET (cbtc or beth) and ENVIRONMENT (devnet, testnet or mainnet).
 /// examples/README.md lists the other variables.
 use std::env;
 mod shared;

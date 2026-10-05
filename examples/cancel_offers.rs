@@ -10,7 +10,7 @@
 /// `bitsafe_token::cancel_offers::v2::withdraw_all` with the same arguments is the
 /// whole difference.
 ///
-/// Set ASSET (cbtc) and ENVIRONMENT (devnet, testnet or mainnet).
+/// Set ASSET (cbtc or beth) and ENVIRONMENT (devnet, testnet or mainnet).
 /// examples/README.md lists the other variables.
 use std::env;
 mod shared;
