@@ -94,8 +94,11 @@ fn the_beth_api_compiles_at_its_public_paths() {
         instrument,
         mint::{
             AccountContractRuleSet, Address, B256, Bytes, ContractInfo, CreateDepositAccountParams,
-            DepositAccount, Limits, ListDepositAccountsParams, U256, create_deposit_account,
+            DEPOSIT_EVENT_TOPIC, DEPOSIT_UNIT_WEI, Deposit, DepositAccount, DepositCall,
+            DepositTarget, Limits, ListDepositAccountsParams, U256, create_deposit_account,
+            daml_decimal_to_wei, deposit_call, deposit_id_topic, deposit_target,
             find_deposit_account, get_account_contract_rules, list_deposit_accounts,
+            wei_to_daml_decimal,
         },
         minter_credential_cids, minter_credential_offers,
         redeem::{
@@ -136,4 +139,8 @@ fn the_beth_api_compiles_at_its_public_paths() {
     )> = None;
     let _: Option<SubmitWithdrawParams<'static>> = None;
     let _: Option<(Address, B256, Bytes, U256)> = None;
+    let _ = (deposit_call, deposit_target, deposit_id_topic);
+    let _ = (wei_to_daml_decimal, daml_decimal_to_wei);
+    let _ = (DEPOSIT_EVENT_TOPIC, DEPOSIT_UNIT_WEI);
+    let _: Option<(DepositCall, DepositTarget, Deposit)> = None;
 }

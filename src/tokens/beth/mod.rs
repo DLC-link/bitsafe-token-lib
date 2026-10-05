@@ -161,8 +161,145 @@ pub use family::{minter_credential_cids, minter_credential_offers};
 /// `Address` prints as its EIP-55 form, `Bytes` as `0x` hex and `U256` as
 /// a decimal number, so a caller without alloy can print every value.
 pub mod mint {
+    use super::{BethNetworkConfig, config};
+    use crate::{
+        Network, flows::canton_bridge_v1::check_registrar,
+        kits::evm::evm_asset_bridge::encode_deposit_eth,
+    };
+
     pub use super::family::mint::*;
+    pub use crate::kits::evm::evm_asset_bridge::{
+        DEPOSIT_EVENT_TOPIC, DEPOSIT_UNIT_WEI, Deposit, daml_decimal_to_wei, deposit_id_topic,
+        wei_to_daml_decimal,
+    };
     pub use alloy_primitives::{Address, B256, Bytes, U256};
+
+    /// The fields of a `depositETH` transaction. The caller signs and sends
+    /// it with its own Ethereum wallet; this crate sends nothing.
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    pub struct DepositCall {
+        /// The chain to send on: 1 for Ethereum mainnet, 11155111 for Sepolia.
+        pub chain_id: u64,
+        /// The BETH bridge proxy on that chain.
+        pub to: Address,
+        /// The ETH to deposit, in wei: the amount the caller passed.
+        pub value: U256,
+        /// `depositETH(bytes)` with the UTF-8 bytes of the account id.
+        pub data: Bytes,
+        /// The account id that `data` carries, for the caller's records.
+        pub deposit_id: String,
+    }
+
+    /// Where a deposit for an account goes, for a front end that builds the
+    /// transaction itself.
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    pub struct DepositTarget {
+        /// The chain to send on: 1 for Ethereum mainnet, 11155111 for Sepolia.
+        pub chain_id: u64,
+        /// The BETH bridge proxy on that chain.
+        pub to: Address,
+        /// The account id that the attestors match a deposit on.
+        pub deposit_id: String,
+        /// The `depositETH` argument: the UTF-8 bytes of `deposit_id`.
+        pub deposit_id_bytes: Bytes,
+        /// Every deposit must be a whole multiple of this many wei.
+        pub deposit_unit_wei: U256,
+    }
+
+    /// Builds the `depositETH(bytes)` transaction that mints BETH to the
+    /// account. The function does no I/O, so a front end can call it on
+    /// every keystroke. It does not read the bridge's live
+    /// `depositLimits()` or `paused()`; check both with your provider.
+    ///
+    /// ```
+    /// use bitsafe_token::{Network, tokens::beth::mint::{self, DepositAccount, DepositCall, U256}};
+    ///
+    /// fn call(account: &DepositAccount) -> Result<DepositCall, String> {
+    ///     // 0.01 ETH
+    ///     mint::deposit_call(Network::Devnet, account, U256::from(10_000_000_000_000_000_u64))
+    /// }
+    /// ```
+    ///
+    /// A CBTC account does not compile, because the bridge would accept its
+    /// id and lock the ETH:
+    ///
+    /// ```compile_fail
+    /// use bitsafe_token::{Network, tokens::{beth::mint::{self, DepositCall, U256}, cbtc}};
+    ///
+    /// fn call(account: &cbtc::mint::DepositAccount) -> Result<DepositCall, String> {
+    ///     mint::deposit_call(Network::Devnet, account, U256::from(10_000_000_000_000_000_u64))
+    /// }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Fails, in this order, when the account belongs to another network,
+    /// when its id is empty, when the amount is zero, when the amount is
+    /// not a whole multiple of 100000000 wei, when the amount is too large
+    /// for a Daml decimal, and when the amount is outside the account's
+    /// limits.
+    pub fn deposit_call(
+        network: Network,
+        account: &DepositAccount,
+        amount_wei: U256,
+    ) -> Result<DepositCall, String> {
+        deposit_call_for(config(network), account, amount_wei)
+    }
+
+    /// The body of `deposit_call`, for a registrar outside the three
+    /// networks. The localnet suite calls it with the sandbox registrar.
+    pub(crate) fn deposit_call_for(
+        network_config: &BethNetworkConfig,
+        account: &DepositAccount,
+        amount_wei: U256,
+    ) -> Result<DepositCall, String> {
+        let target = deposit_target_for(network_config, account)?;
+        if amount_wei.is_zero() {
+            return Err("Deposit amount must be greater than 0".to_string());
+        }
+        account.check_amount(wei_to_daml_decimal(amount_wei)?)?;
+        Ok(DepositCall {
+            chain_id: target.chain_id,
+            to: target.to,
+            value: amount_wei,
+            data: encode_deposit_eth(&target.deposit_id),
+            deposit_id: target.deposit_id,
+        })
+    }
+
+    /// The chain, the proxy and the deposit id of the account, for a front
+    /// end that builds the transaction itself.
+    ///
+    /// # Errors
+    ///
+    /// Fails when the account belongs to another network, and when its id
+    /// is empty.
+    pub fn deposit_target(
+        network: Network,
+        account: &DepositAccount,
+    ) -> Result<DepositTarget, String> {
+        deposit_target_for(config(network), account)
+    }
+
+    /// The body of `deposit_target`, for a registrar outside the three
+    /// networks.
+    pub(crate) fn deposit_target_for(
+        network_config: &BethNetworkConfig,
+        account: &DepositAccount,
+    ) -> Result<DepositTarget, String> {
+        check_registrar(&account.registrar, network_config.registrar)?;
+        let deposit_id = account.account_id();
+        if deposit_id.is_empty() {
+            return Err("empty deposit id".to_string());
+        }
+        Ok(DepositTarget {
+            chain_id: network_config.bridge.chain_id,
+            to: network_config.bridge.proxy,
+            deposit_id: deposit_id.to_string(),
+            deposit_id_bytes: Bytes::copy_from_slice(deposit_id.as_bytes()),
+            deposit_unit_wei: DEPOSIT_UNIT_WEI,
+        })
+    }
 }
 
 /// Redeeming BETH: withdraw accounts, the burn and the payout records.
@@ -471,6 +608,121 @@ mod tests {
                 "network mismatch: account registrar {}, expected {}",
                 registrar(Network::Devnet),
                 registrar(Network::Mainnet)
+            )
+        );
+    }
+
+    /// Produced by the attestors' own deposit-call encoder for `VECTOR_ID`.
+    const VECTOR_ID: &str = "00a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718ca1212200d3b6e1f9a8c7b5e0d3b6e1f9a8c7b5e0d3b6e1f9a8c7b5e0d3b6e1f9a8c7b5e";
+    const VECTOR_CALL: &str = "0xdeec7c8f0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000008a30306131623263336434653566363037313861316232633364346535663630373138613162326333643465356636303731386131623263336434653566363037313863613132313232303064336236653166396138633762356530643362366531663961386337623565306433623665316639613863376235653064336236653166396138633762356500000000000000000000000000000000000000000000";
+    const SMOKE_CALL: &str = "0xdeec7c8f00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000005736d6f6b65000000000000000000000000000000000000000000000000000000";
+
+    fn wei(text: &str) -> mint::U256 {
+        text.parse().unwrap()
+    }
+
+    fn devnet_deposit_account(contract_id: &str, id: Value, limits: Value) -> mint::DepositAccount {
+        let mut args = deposit_args(id);
+        args["limits"] = limits;
+        DepositAccount::<Beth>::from_active_contract(&active_contract_of(DA, contract_id, args))
+            .unwrap()
+    }
+
+    #[test]
+    fn deposit_call_encodes_the_stable_id_like_the_attestor_stack() {
+        let account = devnet_deposit_account("00current", json!(VECTOR_ID), json!(null));
+        let call = mint::deposit_call(Network::Devnet, &account, wei("10000000000000000")).unwrap();
+        assert_eq!(call.data.to_string(), VECTOR_CALL);
+        assert_eq!(call.deposit_id, VECTOR_ID);
+        assert_eq!(call.chain_id, 11_155_111);
+        assert_eq!(call.to, bridge(Network::Devnet).proxy);
+        assert_eq!(call.value, wei("10000000000000000"));
+    }
+
+    #[test]
+    fn deposit_call_encodes_the_contract_id_of_a_fresh_account() {
+        let account = devnet_deposit_account("smoke", json!(null), json!(null));
+        let call = mint::deposit_call(Network::Devnet, &account, wei("100000000")).unwrap();
+        assert_eq!(call.data.to_string(), SMOKE_CALL);
+        assert_eq!(call.deposit_id, "smoke");
+    }
+
+    #[test]
+    fn deposit_call_refuses_an_account_from_another_network() {
+        let account = devnet_deposit_account("00da", json!(null), json!(null));
+        assert_eq!(
+            mint::deposit_call(Network::Mainnet, &account, wei("100000000")).unwrap_err(),
+            format!(
+                "network mismatch: account registrar {}, expected {}",
+                registrar(Network::Devnet),
+                registrar(Network::Mainnet)
+            )
+        );
+    }
+
+    #[test]
+    fn deposit_call_refuses_an_empty_deposit_id() {
+        let account = devnet_deposit_account("", json!(null), json!(null));
+        assert_eq!(
+            mint::deposit_call(Network::Devnet, &account, wei("100000000")).unwrap_err(),
+            "empty deposit id"
+        );
+    }
+
+    #[test]
+    fn deposit_call_refuses_a_zero_amount() {
+        let account = devnet_deposit_account("00da", json!(null), json!(null));
+        assert_eq!(
+            mint::deposit_call(Network::Devnet, &account, wei("0")).unwrap_err(),
+            "Deposit amount must be greater than 0"
+        );
+    }
+
+    #[test]
+    fn deposit_call_refuses_an_amount_that_is_not_a_whole_unit() {
+        let account = devnet_deposit_account("00da", json!(null), json!(null));
+        assert_eq!(
+            mint::deposit_call(Network::Devnet, &account, wei("100000001")).unwrap_err(),
+            "amount 100000001 wei is not a whole multiple of 100000000 wei"
+        );
+    }
+
+    #[test]
+    fn deposit_call_checks_the_account_limits_with_the_check_amount_texts() {
+        let limits = json!({"minAmount": "0.01", "maxAmount": "100"});
+        let account = devnet_deposit_account("00da", json!(null), limits);
+        assert_eq!(
+            mint::deposit_call(Network::Devnet, &account, wei("5000000000000000")).unwrap_err(),
+            "Deposit amount 0.005 is below minimum 0.01"
+        );
+        assert_eq!(
+            mint::deposit_call(Network::Devnet, &account, wei("101000000000000000000"))
+                .unwrap_err(),
+            "Deposit amount 101 exceeds maximum 100"
+        );
+        assert!(mint::deposit_call(Network::Devnet, &account, wei("10000000000000000")).is_ok());
+    }
+
+    #[test]
+    fn deposit_target_names_the_chain_the_proxy_and_the_id_bytes() {
+        let account = devnet_deposit_account("00current", json!(VECTOR_ID), json!(null));
+        let target = mint::deposit_target(Network::Devnet, &account).unwrap();
+        assert_eq!(target.chain_id, 11_155_111);
+        assert_eq!(target.to, bridge(Network::Devnet).proxy);
+        assert_eq!(target.deposit_id, VECTOR_ID);
+        assert_eq!(target.deposit_id_bytes.as_ref(), VECTOR_ID.as_bytes());
+        assert_eq!(target.deposit_unit_wei, wei("100000000"));
+    }
+
+    #[test]
+    fn deposit_target_refuses_an_account_from_another_network() {
+        let account = devnet_deposit_account("00da", json!(null), json!(null));
+        assert_eq!(
+            mint::deposit_target(Network::Testnet, &account).unwrap_err(),
+            format!(
+                "network mismatch: account registrar {}, expected {}",
+                registrar(Network::Devnet),
+                registrar(Network::Testnet)
             )
         );
     }
