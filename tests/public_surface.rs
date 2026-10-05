@@ -84,3 +84,56 @@ fn the_cbtc_api_compiles_at_its_public_paths() {
     let _: Option<SubmitWithdrawParams<'static>> = None;
     let _: Option<WithdrawRequestDetails> = None;
 }
+
+/// The whole BETH API is reachable under `tokens::beth`, with no generic
+/// parameter and no crate-private path. A missing name is a compile error.
+#[test]
+fn the_beth_api_compiles_at_its_public_paths() {
+    use bitsafe_token::tokens::beth::{
+        self, Beth, BethNetworkConfig, EvmBridge, INFO, TICKER, bridge, client_config, config,
+        instrument,
+        mint::{
+            AccountContractRuleSet, Address, B256, Bytes, ContractInfo, CreateDepositAccountParams,
+            DepositAccount, Limits, ListDepositAccountsParams, U256, create_deposit_account,
+            find_deposit_account, get_account_contract_rules, list_deposit_accounts,
+        },
+        minter_credential_cids, minter_credential_offers,
+        redeem::{
+            CreateWithdrawAccountParams, ListHoldingsParams, ListWithdrawAccountsParams,
+            ListWithdrawRequestsParams, SubmitWithdrawParams, WithdrawAccount, WithdrawRequest,
+            create_withdraw_account, find_withdraw_account, list_holdings, list_withdraw_accounts,
+            list_withdraw_requests, submit_withdraw,
+        },
+    };
+    let network = bitsafe_token::Network::Devnet;
+    let _: (&BethNetworkConfig, EvmBridge, &str) =
+        (config(network), bridge(network), beth::registrar(network));
+    let _ = (Beth, INFO, TICKER, client_config, instrument);
+    let _ = (minter_credential_cids, minter_credential_offers);
+    let _ = (
+        create_deposit_account,
+        find_deposit_account,
+        get_account_contract_rules,
+        list_deposit_accounts,
+    );
+    let _ = (
+        create_withdraw_account,
+        find_withdraw_account,
+        list_holdings,
+    );
+    let _ = (
+        list_withdraw_accounts,
+        list_withdraw_requests,
+        submit_withdraw,
+    );
+    let _: Option<(DepositAccount, AccountContractRuleSet, ContractInfo, Limits)> = None;
+    let _: Option<(ListDepositAccountsParams, CreateDepositAccountParams)> = None;
+    let _: Option<(WithdrawAccount, WithdrawRequest, ListWithdrawAccountsParams)> = None;
+    let _: Option<(
+        CreateWithdrawAccountParams,
+        ListHoldingsParams,
+        ListWithdrawRequestsParams,
+    )> = None;
+    let _: Option<SubmitWithdrawParams<'static>> = None;
+    let _: Option<(Address, B256, Bytes, U256)> = None;
+}

@@ -62,6 +62,25 @@ pub fn client_config(
 impl redeem::WithdrawRequest {
     /// The Bitcoin transaction id of the payout, which the registrar sets
     /// when it creates the request.
+    ///
+    /// ```
+    /// use bitsafe_token::tokens::cbtc;
+    ///
+    /// fn tx_id(request: &cbtc::redeem::WithdrawRequest) -> &str {
+    ///     request.btc_tx_id()
+    /// }
+    /// ```
+    ///
+    /// A BETH request has no Bitcoin transaction id, so the same call on a
+    /// BETH request does not compile:
+    ///
+    /// ```compile_fail
+    /// use bitsafe_token::tokens::beth;
+    ///
+    /// fn tx_id(request: &beth::redeem::WithdrawRequest) -> &str {
+    ///     request.btc_tx_id()
+    /// }
+    /// ```
     pub fn btc_tx_id(&self) -> &str {
         &self.details.btc_tx_id
     }

@@ -18,6 +18,7 @@ unsafe_code = "forbid"
 uninlined_format_args = "allow"
 
 [dependencies]
+alloy-primitives = { version = "1.7.3" }
 common = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.9.0" }
 ledger = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.9.0" }
 registry = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.9.0" }

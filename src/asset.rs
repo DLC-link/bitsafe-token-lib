@@ -62,6 +62,6 @@ mod tests {
     #[test]
     fn all_lists_every_supported_asset_once() {
         let tickers: Vec<&str> = crate::tokens::ALL.iter().map(|info| info.ticker).collect();
-        assert_eq!(tickers, vec!["CBTC"]);
+        assert_eq!(tickers, vec!["CBTC", "BETH"]);
     }
 }

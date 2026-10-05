@@ -4,3 +4,4 @@
 
 pub(crate) mod bitsafe_api;
 pub(crate) mod canton;
+pub(crate) mod evm;
