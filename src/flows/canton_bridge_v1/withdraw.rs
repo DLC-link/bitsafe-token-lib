@@ -51,6 +51,9 @@ pub struct SubmitWithdrawParams<'a, A> {
     pub access_token: String,
     /// The withdraw account to burn into. Its pending balance must be zero.
     pub account: &'a WithdrawAccount<A>,
+    /// The amount to burn, as a Daml decimal in the asset's own unit: BTC
+    /// for CBTC and ETH for BETH, such as `0.01`. It is not in satoshi or
+    /// wei. For BETH, `beth::mint::wei_to_daml_decimal` converts wei.
     pub amount: DamlDecimal,
     /// The holdings to burn, from `list_holdings`. Their sum must cover `amount`.
     pub holdings: &'a [Holding],

@@ -211,6 +211,13 @@ pub mod mint {
     /// every keystroke. It does not read the bridge's live
     /// `depositLimits()` or `paused()`; check both with your provider.
     ///
+    /// `amount_wei` is in wei, as a `U256`: 1 ETH is 10^18 wei, and the
+    /// amount must be a whole multiple of [`DEPOSIT_UNIT_WEI`]. The burn
+    /// takes the other unit: `redeem::submit_withdraw` reads its amount as
+    /// a [`DamlDecimal`](crate::DamlDecimal) in ETH, such as `0.01`.
+    /// [`wei_to_daml_decimal`] and [`daml_decimal_to_wei`] convert between
+    /// the two.
+    ///
     /// ```
     /// use bitsafe_token::{Network, tokens::beth::mint::{self, DepositAccount, DepositCall, U256}};
     ///
