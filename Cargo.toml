@@ -20,13 +20,13 @@ uninlined_format_args = "allow"
 [dependencies]
 alloy-primitives = { version = "1.7.3" }
 alloy-sol-types = { version = "1.7.3" }
-common = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.9.0" }
-ledger = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.9.0" }
-registry = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.9.0" }
+common = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.10.0" }
+ledger = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.10.0" }
+registry = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.10.0" }
 reqwest = { version = "0.13.5", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1" }
-token = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.9.0" }
+token = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.10.0" }
 uuid = { version = "1.18", features = ["v4"] }
 
 [dev-dependencies]
@@ -35,7 +35,7 @@ chrono = { version = "0.4.42" }
 csv = { version = "1.3" }
 dotenvy = { version = "0.15" }
 env_logger = { version = "0.11" }
-keycloak = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.9.0" }
+keycloak = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.10.0" }
 tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread", "time"] }
 
 [[example]]
