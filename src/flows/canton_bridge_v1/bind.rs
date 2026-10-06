@@ -118,6 +118,8 @@ macro_rules! bind_canton_bridge_v1 {
 
                 /// Burns the holdings into the withdraw account, after the
                 /// local checks. Returns the account with its new pending balance.
+                /// `params.amount` is a Daml decimal in the asset's own unit,
+                /// BTC or ETH, not satoshi or wei.
                 pub async fn submit_withdraw(
                     network: Network,
                     params: SubmitWithdrawParams<'_>,
