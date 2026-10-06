@@ -32,6 +32,10 @@ The first release. `bitsafe-token` replaces `cbtc-lib` and adds BETH.
 - The DAR folder `cbtc-dars/` is now `dars/`. `upload_dars.sh` takes the
   asset as its argument, and reads `jwt_token` and `canton_admin_api_url`
   from the environment.
+- The crate uses `canton-lib` 0.10.0 instead of 0.9.0. Its active-contract
+  queries and update streams send `eventFormat` and `updateFormat`, which
+  Canton 3.6.1 requires. The `ledger` re-export no longer has
+  `submit::wait_for_transaction_tree` or `common::TransactionFilter`.
 - The dependency DAR set changed: `splice-amulet` 0.1.16 instead of 0.1.17,
   `splice-util` 0.1.4 instead of 0.1.5, and newer Canton Network Utility
   versions.
