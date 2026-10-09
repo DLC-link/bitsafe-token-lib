@@ -6,6 +6,20 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-09
+
+### Changed
+
+- The crate uses `canton-lib` 0.11.0 instead of 0.10.0. `canton-lib` now
+  uses `canton-api-client` 3.6.1 instead of 3.6.0.
+- A project that also depends on a `canton-lib` crate must pin `v0.11.0`.
+  With a `v0.10.0` pin, Cargo cannot resolve `canton-api-client` and the
+  build fails. A direct `canton-api-client` dependency must be
+  `3.6.1-0.1.0` for the same reason.
+- The re-exported `active_contracts::get` returns the Ledger API error when
+  the participant rejects the request. With 0.10.0 it returned an empty
+  list, so a rejected balance query reported 0.
+
 ## [0.1.0] - 2026-10-06
 
 The first release. `bitsafe-token` replaces `cbtc-lib` and adds BETH.

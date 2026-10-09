@@ -6,7 +6,7 @@ also re-exports the Canton Token Standard operations of
 [canton-lib](https://github.com/DLC-link/canton-lib), so you can hold, send
 and receive both assets.
 
-**Status: 0.1.0.** The API can change in any 0.x release. The crate is not on
+**Status: 0.2.0.** The API can change in any 0.x release. The crate is not on
 crates.io; you add it as a git dependency. It needs Rust 1.94 or newer
 (edition 2024).
 
@@ -16,15 +16,16 @@ Add the crate to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-bitsafe-token = { git = "https://github.com/DLC-link/bitsafe-token-lib", tag = "v0.1.0" }
+bitsafe-token = { git = "https://github.com/DLC-link/bitsafe-token-lib", tag = "v0.2.0" }
 # Login. Or use your own OpenID Connect client and pass its access token.
-keycloak = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.10.0" }
+keycloak = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.11.0" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 ```
 
-If you add other `canton-lib` crates, pin the same tag, `v0.10.0`. Two
+If you add other `canton-lib` crates, pin the same tag, `v0.11.0`. Two
 different pins make Cargo build two copies of the shared types, and then the
-types do not match.
+types do not match. A direct `canton-api-client` dependency must be version
+`3.6.1-0.1.0`. With any other version, Cargo cannot resolve the build.
 
 ## Before you start
 
