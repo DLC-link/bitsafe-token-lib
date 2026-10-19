@@ -6,6 +6,19 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- `credentials::accept_credential_offer` exercises the UserService by the
+  package-name template id, through `canton-lib` 0.12.0. It used to pin the
+  package version the UserService was created with, and a participant that
+  no longer vets that version rejected the accept with
+  `INVALID_PRESCRIBED_SYNCHRONIZER_ID`.
+
+### Changed — breaking
+
+- `AcceptCredentialOfferParams` loses its `user_service_template_id` field.
+  Drop it at the call site; the `credentials` examples show the new shape.
+
 ## [0.2.0] - 2026-10-09
 
 ### Changed
