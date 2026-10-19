@@ -19,6 +19,12 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `AcceptCredentialOfferParams` loses its `user_service_template_id` field.
   Drop it at the call site; the `credentials` examples show the new shape.
 
+### Security
+
+- The lockfile moves `rustls` to 0.23.46 and, through `canton-lib`, `zip` to
+  9.0.5. Both close RustSec advisories published on 2026-10-09 that failed
+  `cargo deny check advisories`.
+
 ## [0.2.0] - 2026-10-09
 
 ### Changed
