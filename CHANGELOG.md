@@ -6,24 +6,35 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-21
+
 ### Fixed
 
 - `credentials::accept_credential_offer` exercises the UserService by the
-  package-name template id, through `canton-lib` 0.12.0. It used to pin the
-  package version the UserService was created with, and a participant that
-  no longer vets that version rejected the accept with
+  package-name template id, through `canton-lib` 0.12.0. The participant then
+  picks a package version that every host vets. With 0.2.0, the accept used
+  the package version that the UserService was created with. A participant
+  that did not vet that version rejected the accept with
   `INVALID_PRESCRIBED_SYNCHRONIZER_ID`.
 
 ### Changed — breaking
 
 - `AcceptCredentialOfferParams` loses its `user_service_template_id` field.
   Drop it at the call site; the `credentials` examples show the new shape.
+- The crate uses `canton-lib` 0.12.0 instead of 0.11.0. A project that also
+  depends on a `canton-lib` crate must pin `v0.12.0`. Two different pins make
+  Cargo build two copies of the shared types, and then the types do not
+  match.
 
 ### Security
 
-- The lockfile moves `rustls` to 0.23.46 and, through `canton-lib`, `zip` to
-  9.0.5. Both close RustSec advisories published on 2026-10-09 that failed
-  `cargo deny check advisories`.
+- The lockfile moves `rustls` to 0.23.46. This closes RUSTSEC-2026-0346 to
+  RUSTSEC-2026-0349.
+- `canton-lib` 0.12.0 moves `zip` to 9.0.5. This closes RUSTSEC-2026-0367 to
+  RUSTSEC-2026-0369.
+- The lockfile moves `rustls-webpki` to 0.103.16, which closes
+  RUSTSEC-2026-0382. It moves `webpki-root-certs` to 1.0.10, which closes
+  RUSTSEC-2026-0383.
 
 ## [0.2.0] - 2026-10-09
 
