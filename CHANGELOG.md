@@ -6,6 +6,23 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed — breaking
+
+- `Deposit` follows the bridge upgrade from DLC-link/evm-asset-bridge#68.
+  The event has a new last field, `prevDepositBlock`. Any code that builds
+  or decodes a `Deposit` must handle the new field.
+- `DEPOSIT_EVENT_TOPIC` now matches only the new event,
+  `Deposit(bytes32,bytes,address,uint256,uint256)`. Its value is
+  `0xf3ca88974ec5963addc617fe6c0c359d7196759e318be6ab0cade940986e30e2`.
+- A caller that reads deposits from before the contract upgrade must also
+  filter on the old topic0,
+  `0xacaea730ea841fae3326f72a7ff746b6e06c646840526bcaf5dabee5fd887ef8`.
+  `Deposit::decode_log` rejects an old log, because its topic0 differs.
+  The crate has no type for the old event, so declare the four-field
+  layout in your own `sol!` block to decode an old log. Do not decode its
+  data as a `Deposit`: the decode succeeds, but `prevDepositBlock` then
+  holds the byte length of the deposit id.
+
 ## [0.3.0] - 2026-10-21
 
 ### Fixed
