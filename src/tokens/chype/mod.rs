@@ -458,6 +458,11 @@ mod tests {
                 "0x200000000000000000000000000000000000ffff",
                 "a HyperEVM token system address",
             ),
+            // The largest token index: all four index bytes set.
+            (
+                "0x20000000000000000000000000000000ffffffff",
+                "a HyperEVM token system address",
+            ),
         ];
         for (address, reason) in cases {
             assert_eq!(
@@ -475,20 +480,72 @@ mod tests {
             "0x2100000000000000000000000000000000000000",
             "0x2000000000000000000000000000000100000000",
             "0x2222222222222222222222222222222222222223",
+            "0x3333333333333333333333333333333333333334",
         ] {
             assert_eq!(Chype::validate_destination(address), Ok(()), "{address}");
         }
     }
 
     /// BETH pays to the HyperEVM system addresses, because they are ordinary
-    /// accounts on Ethereum.
+    /// accounts on Ethereum. Each kind of system address is checked, so a
+    /// CHYPE rule that leaks into the shared EVM check fails here.
     #[test]
     fn beth_does_not_refuse_the_hyperevm_system_addresses() {
         use crate::tokens::beth::Beth;
-        assert_eq!(
-            Beth::validate_destination("0x2222222222222222222222222222222222222222"),
-            Ok(())
-        );
+        for address in [
+            "0x2222222222222222222222222222222222222222",
+            "0x3333333333333333333333333333333333333333",
+            "0x0000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000800",
+            "0x000000000000000000000000000000000000ffff",
+            "0x2000000000000000000000000000000000000000",
+            "0x20000000000000000000000000000000000000c8",
+            "0x20000000000000000000000000000000ffffffff",
+        ] {
+            assert_eq!(Beth::validate_destination(address), Ok(()), "{address}");
+        }
+    }
+
+    /// A CHYPE withdraw account is read by its own field name. A payload
+    /// that carries BETH's field name instead must fail, not read an empty
+    /// destination.
+    #[test]
+    fn a_chype_withdraw_account_with_the_beth_field_name_fails_by_name() {
+        let args = json!({
+            "owner": "alice", "operator": "op", "registrar": registrar(Network::Devnet),
+            "id": null, "destinationEthAddress": CHECKSUMMED, "pendingBalance": "0",
+            "limits": null,
+        });
+        let error =
+            redeem::WithdrawAccount::from_active_contract(&active_contract_of(WA, "00wa", args))
+                .unwrap_err();
+        assert!(error.contains("destinationAddress"), "{error}");
+    }
+
+    /// The same for a withdraw request.
+    #[test]
+    fn a_chype_withdraw_request_with_the_beth_field_name_fails_by_name() {
+        let args = json!({
+            "owner": "alice", "registrar": registrar(Network::Devnet), "amount": "0.25",
+            "destinationEthAddress": CHECKSUMMED, "sourceAccountId": null,
+        });
+        let error =
+            WithdrawRequest::<Chype>::from_active_contract(&active_contract_of(WR, "00wr", args))
+                .unwrap_err();
+        assert!(error.contains("destinationAddress"), "{error}");
+    }
+
+    /// A CHYPE deposit account that carries BETH's block field must fail.
+    #[test]
+    fn a_chype_deposit_account_with_the_beth_block_field_fails_by_name() {
+        let mut args = deposit_args(json!(null));
+        let object = args.as_object_mut().unwrap();
+        object.remove("lastProcessedBlock");
+        object.insert("lastProcessedEthereumBlock".to_string(), json!("66360900"));
+        let error =
+            DepositAccount::<Chype>::from_active_contract(&active_contract_of(DA, "00da", args))
+                .unwrap_err();
+        assert_eq!(error, "Missing or invalid 'lastProcessedBlock' field");
     }
 
     fn deposit_args(id: Value) -> Value {
@@ -756,6 +813,139 @@ mod tests {
             "Deposit amount 0.1 is below minimum 0.25"
         );
         assert!(mint::deposit_call(Network::Devnet, &account, wei("250000000000000000")).is_ok());
+    }
+
+    fn deposit_account_on(network: Network) -> mint::DepositAccount {
+        let mut args = deposit_args(json!("00orig"));
+        args["registrar"] = json!(registrar(network));
+        args["instrument"] = json!({"admin": registrar(network), "id": "CHYPE"});
+        args["limits"] = json!(null);
+        DepositAccount::<Chype>::from_active_contract(&active_contract_of(DA, "00da", args))
+            .unwrap()
+    }
+
+    /// The chain and proxy literals come from the requirements, not from
+    /// `bridge()`, so a network mapped to the wrong bridge fails here.
+    #[test]
+    fn deposit_call_and_target_use_the_bridge_of_each_network() {
+        let expected = [
+            (
+                Network::Devnet,
+                998,
+                "0xfBC38458ffb91D6Fd731151D46345E89ffc42358",
+            ),
+            (
+                Network::Testnet,
+                998,
+                "0x1E5439257A314d11e6b0779297Ca92887Ed56087",
+            ),
+            (
+                Network::Mainnet,
+                999,
+                "0x2940FcBb3C32901Df405da0E96fd97D1E2a53f34",
+            ),
+        ];
+        for (network, chain_id, proxy) in expected {
+            let account = deposit_account_on(network);
+            let call = mint::deposit_call(network, &account, wei("250000000000000000")).unwrap();
+            assert_eq!(call.chain_id, chain_id, "{network}");
+            assert_eq!(call.to.to_string(), proxy, "{network}");
+            assert_eq!(call.deposit_id, "00orig");
+            let target = mint::deposit_target(network, &account).unwrap();
+            assert_eq!(target.chain_id, chain_id, "{network}");
+            assert_eq!(target.to.to_string(), proxy, "{network}");
+        }
+    }
+
+    #[test]
+    fn deposit_call_refuses_a_zero_amount() {
+        let account = devnet_deposit_account("00da", json!(null), json!(null));
+        assert_eq!(
+            mint::deposit_call(Network::Devnet, &account, wei("0")).unwrap_err(),
+            "Deposit amount must be greater than 0"
+        );
+    }
+
+    #[test]
+    fn deposit_call_and_target_refuse_an_empty_deposit_id() {
+        let account = devnet_deposit_account("", json!(null), json!(null));
+        assert_eq!(
+            mint::deposit_call(Network::Devnet, &account, wei("100000000")).unwrap_err(),
+            "empty deposit id"
+        );
+        assert_eq!(
+            mint::deposit_target(Network::Devnet, &account).unwrap_err(),
+            "empty deposit id"
+        );
+    }
+
+    #[test]
+    fn deposit_call_refuses_an_amount_too_large_for_a_daml_decimal() {
+        let account = devnet_deposit_account("00da", json!(null), json!(null));
+        // 10^28 HYPE: a whole number of units, but 29 integer digits.
+        let too_large = wei("10000000000000000000000000000000000000000000000");
+        assert_eq!(
+            mint::deposit_call(Network::Devnet, &account, too_large).unwrap_err(),
+            format!("amount {too_large} wei is too large for a Daml decimal")
+        );
+    }
+
+    /// The documented order of the checks: network, id, zero, unit, limits.
+    /// Each input breaks two rules and must report the earlier one.
+    #[test]
+    fn deposit_call_reports_the_first_failed_check() {
+        let wrong_network = mint::deposit_call(
+            Network::Mainnet,
+            &devnet_deposit_account("", json!(null), json!(null)),
+            wei("0"),
+        )
+        .unwrap_err();
+        assert!(
+            wrong_network.starts_with("network mismatch"),
+            "{wrong_network}"
+        );
+        let empty_id = mint::deposit_call(
+            Network::Devnet,
+            &devnet_deposit_account("", json!(null), json!(null)),
+            wei("0"),
+        )
+        .unwrap_err();
+        assert_eq!(empty_id, "empty deposit id");
+        let limits = json!({"minAmount": "0.25", "maxAmount": "2500"});
+        let not_whole = mint::deposit_call(
+            Network::Devnet,
+            &devnet_deposit_account("00da", json!(null), limits),
+            wei("1"),
+        )
+        .unwrap_err();
+        assert_eq!(
+            not_whole,
+            "amount 1 wei is not a whole multiple of 100000000 wei"
+        );
+    }
+
+    #[test]
+    fn deposit_call_refuses_an_amount_above_the_account_maximum() {
+        let limits = json!({"minAmount": "0.25", "maxAmount": "2500"});
+        let account = devnet_deposit_account("00da", json!(null), limits);
+        assert_eq!(
+            mint::deposit_call(Network::Devnet, &account, wei("2501000000000000000000"))
+                .unwrap_err(),
+            "Deposit amount 2501 exceeds maximum 2500"
+        );
+        assert!(
+            mint::deposit_call(Network::Devnet, &account, wei("2500000000000000000000")).is_ok()
+        );
+    }
+
+    /// The converters that `mint` re-exports turn 0.25 HYPE into the wei
+    /// that `deposit_call` takes, and back.
+    #[test]
+    fn the_mint_unit_converters_round_trip_a_hype_amount() {
+        let amount = DamlDecimal::parse("0.25").unwrap();
+        let amount_wei = mint::daml_decimal_to_wei(amount).unwrap();
+        assert_eq!(amount_wei, wei("250000000000000000"));
+        assert_eq!(mint::wei_to_daml_decimal(amount_wei).unwrap(), amount);
     }
 
     #[test]
