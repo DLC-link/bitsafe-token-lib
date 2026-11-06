@@ -52,8 +52,9 @@ pub struct SubmitWithdrawParams<'a, A> {
     /// The withdraw account to burn into. Its pending balance must be zero.
     pub account: &'a WithdrawAccount<A>,
     /// The amount to burn, as a Daml decimal in the asset's own unit: BTC
-    /// for CBTC and ETH for BETH, such as `0.01`. It is not in satoshi or
-    /// wei. For BETH, `beth::mint::wei_to_daml_decimal` converts wei.
+    /// for CBTC, ETH for BETH and HYPE for CHYPE, such as `0.01`. It is not
+    /// in satoshi or wei. For BETH and CHYPE, `mint::wei_to_daml_decimal`
+    /// converts wei.
     pub amount: DamlDecimal,
     /// The holdings to burn, from `list_holdings`. Their sum must cover `amount`.
     pub holdings: &'a [Holding],
@@ -161,6 +162,7 @@ pub(crate) fn check_withdraw<A: CantonBridgeV1>(
 ) -> Result<(), String> {
     let account = params.account;
     check_registrar(&account.registrar, registrar)?;
+    A::check_payout_destination(&account.destination_address)?;
     if params.party != account.owner {
         return Err(format!(
             "Party {} is not the owner {} of the withdraw account",

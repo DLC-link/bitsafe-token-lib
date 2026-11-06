@@ -4,7 +4,7 @@
 # own DARs.
 #
 # Usage: dars/upload_dars.sh <asset>
-#   <asset> is cbtc or beth.
+#   <asset> is cbtc, beth or chype.
 #
 # Environment:
 #   jwt_token             the participant admin token. Leave it unset when the
@@ -17,9 +17,9 @@ set -euo pipefail
 
 asset="${1:-}"
 case "${asset}" in
-  cbtc | beth) ;;
+  cbtc | beth | chype) ;;
   *)
-    echo "Usage: $0 <asset>, where <asset> is one of: cbtc, beth" >&2
+    echo "Usage: $0 <asset>, where <asset> is one of: cbtc, beth, chype" >&2
     exit 2
     ;;
 esac

@@ -1,10 +1,10 @@
 # bitsafe-token
 
 A Rust client library for BitSafe's bridged assets on Canton Network: CBTC
-(Bitcoin) and BETH (Ether). One API shape serves both assets. The library
-also re-exports the Canton Token Standard operations of
+(Bitcoin), BETH (Ether) and CHYPE (HYPE). One API shape serves every asset.
+The library also re-exports the Canton Token Standard operations of
 [canton-lib](https://github.com/DLC-link/canton-lib), so you can hold, send
-and receive both assets.
+and receive every asset.
 
 **Status: 0.3.0.** The API can change in any 0.x release. The crate is not on
 crates.io; you add it as a git dependency. It needs Rust 1.94 or newer
@@ -50,8 +50,8 @@ You need these, for the network you use:
 | Term | Meaning |
 |---|---|
 | Registrar | The party that issues an asset on one network. Each asset module knows its registrar for each network |
-| Minter credential | A credential from the registrar with the claim `hasCBTCRole` or `hasBETHRole` = `Minter`. The mint and burn calls need it |
-| Deposit account | A contract that ties your party to a deposit: a BTC address for CBTC, a deposit id for BETH |
+| Minter credential | A credential from the registrar with the claim `hasCBTCRole`, `hasBETHRole` or `hasCHYPERole` = `Minter`. The mint and burn calls need it |
+| Deposit account | A contract that ties your party to a deposit: a BTC address for CBTC, a deposit id for BETH and CHYPE |
 | Withdraw account | A contract that holds your payout address and your pending (burned) balance |
 | Withdraw request | The payout record. The attestors create it after a burn and archive it after the payout |
 | Holding | One unit of an asset that your party owns, like a UTXO |
@@ -203,9 +203,39 @@ need Sepolia ETH. Mainnet BETH runs on Ethereum mainnet (chain 1). The
 library does not read the bridge's live `depositLimits()` or `paused()`;
 check both with your Ethereum provider before you send.
 
+## Quick start: CHYPE
+
+CHYPE has the same calls as BETH, under `tokens::chype`. The CHYPE bridge
+is the BETH bridge contract, deployed on HyperEVM. It takes HYPE through the
+same `depositETH` function, so `chype::mint::deposit_call` builds the same
+kind of transaction.
+
+**Units.** HYPE has 18 decimals, so CHYPE uses the BETH units.
+`deposit_call` takes wei as a `U256`. `redeem::submit_withdraw` takes HYPE
+as a `DamlDecimal`, such as `0.25`.
+
+**Chains.** Devnet and testnet CHYPE run on HyperEVM testnet (chain 998).
+Mainnet CHYPE runs on HyperEVM (chain 999).
+
+**Limits.** The mainnet bridge takes deposits and pays out withdrawals from
+0.25 HYPE. The library does not read the bridge's live `depositLimits()`,
+`withdrawLimits()` or `paused()`. Check them with your HyperEVM provider
+before you deposit or burn.
+
+**Destinations.** The library refuses a CHYPE payout address that never
+gets a payout. It refuses the zero address, the HyperEVM system addresses
+and the CHYPE bridge proxies. `redeem::create_withdraw_account` checks the
+address, and `redeem::submit_withdraw` checks it again before the burn.
+
+**BitSafe API.** The devnet BitSafe API serves the CHYPE routes. The testnet
+and mainnet APIs do not serve them yet. On those networks, a party cannot
+open a CHYPE account or burn CHYPE. `get_account_contract_rules` fails with a parse error, because the API
+redirects the request. `submit_withdraw` fails in the same way. The calls
+that only list contracts on the ledger work.
+
 ## Hold and send
 
-The re-exported `TokenClient` reads balances and sends either asset. The
+The re-exported `TokenClient` reads balances and sends every asset. The
 asset module gives it the right configuration for each network:
 
 ```rust
@@ -256,11 +286,11 @@ V2 where both exist.
 `Network` is a plain enum: `Devnet`, `Testnet`, `Mainnet`. Each asset module
 maps a `Network` to its own registrar, so you pass only the network.
 
-| Network | Utility registry | BitSafe API | BETH chain |
-| --- | --- | --- | --- |
-| devnet | https://api.utilities.digitalasset-dev.com | https://api.devnet.bitsafe.finance | Sepolia, 11155111 |
-| testnet | https://api.utilities.digitalasset-staging.com | https://api.testnet.bitsafe.finance | Sepolia, 11155111 |
-| mainnet | https://api.utilities.digitalasset.com | https://api.mainnet.bitsafe.finance | Ethereum, 1 |
+| Network | Utility registry | BitSafe API | BETH chain | CHYPE chain |
+| --- | --- | --- | --- | --- |
+| devnet | https://api.utilities.digitalasset-dev.com | https://api.devnet.bitsafe.finance | Sepolia, 11155111 | HyperEVM testnet, 998 |
+| testnet | https://api.utilities.digitalasset-staging.com | https://api.testnet.bitsafe.finance | Sepolia, 11155111 | HyperEVM testnet, 998 |
+| mainnet | https://api.utilities.digitalasset.com | https://api.mainnet.bitsafe.finance | Ethereum, 1 | HyperEVM, 999 |
 
 ## What the library does not do
 
@@ -271,13 +301,13 @@ maps a `Network` to its own registrar, so you pass only the network.
   after the payout, so a paid request no longer appears.
 - **It does not check the network of a BTC address.** Use an address of the
   Bitcoin network that your Canton network pays out on.
-- **It reads no Ethereum state.** It reads no bridge limits, no pause state
-  and no deposit events.
+- **It reads no EVM state.** It reads no bridge limits, no pause state and
+  no deposit events, on Ethereum or on HyperEVM.
 
 ## Examples
 
-[`examples/README.md`](examples/README.md) lists 30 runnable examples, for
-both assets: credentials, mint, burn, transfers, allocations and batch
+[`examples/README.md`](examples/README.md) lists 33 runnable examples, for
+every asset: credentials, mint, burn, transfers, allocations and batch
 distribution. Copy [`.env.example`](.env.example) to `.env`, fill it in, and
 run `cargo run --example <name>`.
 
@@ -295,7 +325,7 @@ cargo test
 are crate-private building blocks. `tokens` may use `flows` and `kits`,
 `flows` may use `kits`, and nothing imports upward; review checks this.
 
-The localnet suite runs the CBTC and BETH flows against a local Canton
+The localnet suite runs the CBTC, BETH and CHYPE flows against a local Canton
 sandbox. It needs Docker:
 
 ```sh

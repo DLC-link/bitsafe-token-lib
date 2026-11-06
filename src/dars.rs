@@ -44,7 +44,7 @@ fn dirs_under(root: &Path, dar_dirs: &[&str]) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tokens::{beth, cbtc};
+    use crate::tokens::{beth, cbtc, chype};
 
     const ROOT: &str = env!("CARGO_MANIFEST_DIR");
 
@@ -103,8 +103,24 @@ mod tests {
     }
 
     #[test]
-    fn both_checks_expect_the_newest_shared_dependencies() {
-        for dar_dirs in [cbtc::INFO.dar_dirs, beth::INFO.dar_dirs] {
+    fn the_chype_check_expects_chype_0_1_0_and_no_beth() {
+        let expected = expected(chype::INFO.dar_dirs);
+        assert!(expected.contains(&(
+            "chype".to_string(),
+            "0.1.0".to_string(),
+            "601dd547300817b9532108638b2cd22190f3a0216996393705d2b97edcc3dfe3".to_string(),
+        )));
+        assert_eq!(version_of(&expected, "beth"), None);
+        assert_eq!(version_of(&expected, "cbtc"), None);
+    }
+
+    #[test]
+    fn every_check_expects_the_newest_shared_dependencies() {
+        for dar_dirs in [
+            cbtc::INFO.dar_dirs,
+            beth::INFO.dar_dirs,
+            chype::INFO.dar_dirs,
+        ] {
             let expected = expected(dar_dirs);
             assert_eq!(version_of(&expected, "splice-util"), Some("0.1.4"));
             assert_eq!(
