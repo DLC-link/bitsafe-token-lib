@@ -5,7 +5,7 @@
 A release of this crate is not finished until the public docs describe it.
 Each supported asset has its own docs space at
 [docs.bitsafe.finance](https://docs.bitsafe.finance). The supported assets
-are the modules in `src/tokens/` (today `cbtc` and `beth`). After you cut a
+are the modules in `src/tokens/` (today `cbtc`, `beth` and `chype`). After you cut a
 release, you and the pilot update the docs of every one of them.
 
 The docs live in GitBook, and docs.bitsafe.finance publishes them. Work on

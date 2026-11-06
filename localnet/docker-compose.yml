@@ -1,16 +1,16 @@
-# A Canton sandbox image with the CBTC and BETH stacks bootstrapped. Its
+# A Canton sandbox image with the CBTC, BETH and CHYPE stacks bootstrapped. Its
 # bootstrap runs unchanged; the localnet suite adds its own test registrar on
 # top.
 services:
   canton:
-    image: public.ecr.aws/dlc-link/canton-sandbox:cbtc-4ee9822
+    image: public.ecr.aws/dlc-link/canton-sandbox:cbtc-6689a6a
     ports:
       - "7575:7575"
     healthcheck:
       # The healthcheck waits until participant3 lists beth-network, which the
       # bootstrap maps after everything the suite needs: the DARs and the
-      # operator's services. The remaining bootstrap steps build beth-network's
-      # own stack, which the suite does not use.
+      # operator's services. The remaining bootstrap steps build the
+      # beth-network and chype-network stacks, which the suite does not use.
       # The image has wget, not curl.
       test: ["CMD-SHELL", "wget -q -O - http://localhost:7577/v2/parties | grep -q beth-network"]
       interval: 10s

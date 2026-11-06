@@ -1,10 +1,10 @@
 # bitsafe-token
 
 A Rust client library for BitSafe's bridged assets on Canton Network: CBTC
-(Bitcoin) and BETH (Ether). One API shape serves both assets. The library
-also re-exports the Canton Token Standard operations of
+(Bitcoin), BETH (Ether) and CHYPE (HYPE). One API shape serves every asset.
+The library also re-exports the Canton Token Standard operations of
 [canton-lib](https://github.com/DLC-link/canton-lib), so you can hold, send
-and receive both assets.
+and receive every asset.
 
 **Status: 0.3.0.** The API can change in any 0.x release. The crate is not on
 crates.io; you add it as a git dependency. It needs Rust 1.94 or newer
@@ -50,8 +50,8 @@ You need these, for the network you use:
 | Term | Meaning |
 |---|---|
 | Registrar | The party that issues an asset on one network. Each asset module knows its registrar for each network |
-| Minter credential | A credential from the registrar with the claim `hasCBTCRole` or `hasBETHRole` = `Minter`. The mint and burn calls need it |
-| Deposit account | A contract that ties your party to a deposit: a BTC address for CBTC, a deposit id for BETH |
+| Minter credential | A credential from the registrar with the claim `hasCBTCRole`, `hasBETHRole` or `hasCHYPERole` = `Minter`. The mint and burn calls need it |
+| Deposit account | A contract that ties your party to a deposit: a BTC address for CBTC, a deposit id for BETH and CHYPE |
 | Withdraw account | A contract that holds your payout address and your pending (burned) balance |
 | Withdraw request | The payout record. The attestors create it after a burn and archive it after the payout |
 | Holding | One unit of an asset that your party owns, like a UTXO |
@@ -203,6 +203,25 @@ need Sepolia ETH. Mainnet BETH runs on Ethereum mainnet (chain 1). The
 library does not read the bridge's live `depositLimits()` or `paused()`;
 check both with your Ethereum provider before you send.
 
+## Quick start: CHYPE
+
+CHYPE uses the BETH calls under `tokens::chype`. The CHYPE bridge is the
+same contract as the BETH bridge, on HyperEVM. It takes HYPE through the
+same `depositETH` function, so `chype::mint::deposit_call` builds the same
+kind of transaction. HYPE has 18 decimals, so the units are the BETH units:
+wei for the deposit, HYPE as a `DamlDecimal` for the burn.
+
+**Chains.** Devnet and testnet CHYPE run on HyperEVM testnet (chain 998).
+Mainnet CHYPE runs on HyperEVM (chain 999).
+
+**Destinations.** `redeem::create_withdraw_account` refuses the HyperEVM
+system addresses, such as `0x2222…2222` and every address below `0x10000`.
+The attestors never pay HYPE to them, and a burn cannot be undone.
+
+**BitSafe API.** The BitSafe API does not serve the CHYPE routes yet. Until
+it does, `get_account_contract_rules` and `redeem::submit_withdraw` fail for
+CHYPE. The calls that read only the ledger work.
+
 ## Hold and send
 
 The re-exported `TokenClient` reads balances and sends either asset. The
@@ -256,11 +275,11 @@ V2 where both exist.
 `Network` is a plain enum: `Devnet`, `Testnet`, `Mainnet`. Each asset module
 maps a `Network` to its own registrar, so you pass only the network.
 
-| Network | Utility registry | BitSafe API | BETH chain |
-| --- | --- | --- | --- |
-| devnet | https://api.utilities.digitalasset-dev.com | https://api.devnet.bitsafe.finance | Sepolia, 11155111 |
-| testnet | https://api.utilities.digitalasset-staging.com | https://api.testnet.bitsafe.finance | Sepolia, 11155111 |
-| mainnet | https://api.utilities.digitalasset.com | https://api.mainnet.bitsafe.finance | Ethereum, 1 |
+| Network | Utility registry | BitSafe API | BETH chain | CHYPE chain |
+| --- | --- | --- | --- | --- |
+| devnet | https://api.utilities.digitalasset-dev.com | https://api.devnet.bitsafe.finance | Sepolia, 11155111 | HyperEVM testnet, 998 |
+| testnet | https://api.utilities.digitalasset-staging.com | https://api.testnet.bitsafe.finance | Sepolia, 11155111 | HyperEVM testnet, 998 |
+| mainnet | https://api.utilities.digitalasset.com | https://api.mainnet.bitsafe.finance | Ethereum, 1 | HyperEVM, 999 |
 
 ## What the library does not do
 
@@ -271,13 +290,13 @@ maps a `Network` to its own registrar, so you pass only the network.
   after the payout, so a paid request no longer appears.
 - **It does not check the network of a BTC address.** Use an address of the
   Bitcoin network that your Canton network pays out on.
-- **It reads no Ethereum state.** It reads no bridge limits, no pause state
-  and no deposit events.
+- **It reads no EVM state.** It reads no bridge limits, no pause state and
+  no deposit events, on Ethereum or on HyperEVM.
 
 ## Examples
 
-[`examples/README.md`](examples/README.md) lists 30 runnable examples, for
-both assets: credentials, mint, burn, transfers, allocations and batch
+[`examples/README.md`](examples/README.md) lists 33 runnable examples, for
+every asset: credentials, mint, burn, transfers, allocations and batch
 distribution. Copy [`.env.example`](.env.example) to `.env`, fill it in, and
 run `cargo run --example <name>`.
 
@@ -295,7 +314,7 @@ cargo test
 are crate-private building blocks. `tokens` may use `flows` and `kits`,
 `flows` may use `kits`, and nothing imports upward; review checks this.
 
-The localnet suite runs the CBTC and BETH flows against a local Canton
+The localnet suite runs the CBTC, BETH and CHYPE flows against a local Canton
 sandbox. It needs Docker:
 
 ```sh

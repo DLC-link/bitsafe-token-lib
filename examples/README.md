@@ -21,13 +21,13 @@ Run every example from the project root with `cargo run --example <name>`.
 **Token Standard examples** live in `examples/`. They work for any asset, and
 `ASSET` in your `.env` picks the asset. There is no default: an example that
 runs on the wrong asset reads a zero balance or sends the wrong token. The
-values are `cbtc` and `beth`.
+values are `cbtc`, `beth` and `chype`.
 
 **Bridge examples** live per asset, in `examples/<asset>/`. They cover the
 mint and redeem flows of one asset and ignore `ASSET`. Cargo registers each
 one as `<asset>_<name>`. The CBTC bridge examples are in `examples/cbtc/`, for
 example `cargo run --example cbtc_mint_flow`. The BETH bridge examples are in
-`examples/beth/`.
+`examples/beth/`, and the CHYPE bridge examples are in `examples/chype/`.
 
 | Token Standard example | What it does |
 |---|---|
@@ -83,7 +83,7 @@ cargo run --example check_dars
 ```
 
 The example scans the DAR files in `dars/dependencies/` and in the asset's
-folder, `dars/cbtc/` or `dars/beth/`. It compares the newest package of each
+folder, `dars/cbtc/`, `dars/beth/` or `dars/chype/`. It compares the newest package of each
 DAR with the packages uploaded to the participant, and it exits non-zero
 when one is missing. It reads no registry and no BitSafe API, so it needs
 neither `ENVIRONMENT` nor `PARTY_ID`. To upload the missing packages, see
@@ -184,6 +184,32 @@ or an amount outside the deposit account's own limits, fails when the example
 builds the call, after it finds or creates the account. The library does not
 read the bridge's live `depositLimits()` or `paused()`; check both with your
 Ethereum provider before you send.
+
+### CHYPE Bridge Examples
+
+The CHYPE examples need a Minter credential issued by the CHYPE registrar.
+They work like the BETH examples, on HyperEVM instead of Ethereum. Run them
+in this order:
+
+1. **`chype_credentials`**: checks for a CHYPE Minter credential and accepts
+   a pending offer if there is one.
+2. **`chype_mint_flow`**: finds or creates a deposit account and prints the
+   `depositETH` transaction for `DEPOSIT_AMOUNT_WEI`. The bridge takes HYPE
+   through this function.
+3. **`chype_redeem_flow`**: finds or creates a withdraw account for
+   `DESTINATION_HYPE_ADDRESS`, burns `WITHDRAW_AMOUNT` CHYPE and lists the
+   withdraw requests.
+
+```bash
+cargo run --example chype_credentials
+cargo run --example chype_mint_flow
+cargo run --example chype_redeem_flow
+```
+
+`chype_mint_flow` sends nothing. You sign and send the printed transaction
+with your own HyperEVM wallet on the printed chain. The BitSafe API does not
+serve the CHYPE routes yet. Until it does, `chype_mint_flow` works only with
+an existing deposit account, and `chype_redeem_flow` cannot burn.
 
 ### Check Balance
 
@@ -633,7 +659,7 @@ Required for every example that touches a network:
 
 Required for every Token Standard example:
 
-- `ASSET` - The asset to work on: `cbtc` or `beth`.
+- `ASSET` - The asset to work on: `cbtc`, `beth` or `chype`.
 
 `check_dars` reads `ASSET` but not `ENVIRONMENT`. Two examples read neither
 `ENVIRONMENT` nor `ASSET` and need no network configuration:
@@ -648,8 +674,9 @@ Mint and redeem:
 
 - `DESTINATION_BTC_ADDRESS` - Payout address for `cbtc_redeem_flow`. It has no default.
 - `DESTINATION_ETH_ADDRESS` - Payout address for `beth_redeem_flow`. It has no default.
-- `DEPOSIT_AMOUNT_WEI` - The deposit `beth_mint_flow` builds, in wei (default: `10000000000000000`, 0.01 ETH)
-- `WITHDRAW_AMOUNT` - Amount to burn, in the asset's unit (default: `0.001` for `cbtc_redeem_flow`, `0.01` for `beth_redeem_flow`)
+- `DESTINATION_HYPE_ADDRESS` - Payout address for `chype_redeem_flow`. It has no default.
+- `DEPOSIT_AMOUNT_WEI` - The deposit `beth_mint_flow` or `chype_mint_flow` builds, in wei (default: `10000000000000000`, 0.01 ETH, for `beth_mint_flow`, and `250000000000000000`, 0.25 HYPE, for `chype_mint_flow`)
+- `WITHDRAW_AMOUNT` - Amount to burn, in the asset's unit (default: `0.001` for `cbtc_redeem_flow`, `0.01` for `beth_redeem_flow`, `0.25` for `chype_redeem_flow`)
 
 Transfers:
 

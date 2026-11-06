@@ -6,7 +6,7 @@ use crate::Network;
 /// An asset's identity: the facts tooling needs without any flow.
 #[derive(Debug, Clone, Copy)]
 pub struct AssetInfo {
-    /// The instrument id, `"CBTC"` or `"BETH"`.
+    /// The instrument id, such as `"CBTC"`.
     pub ticker: &'static str,
     /// The registrar party that administers the instrument on a network.
     pub registrar: fn(Network) -> &'static str,
@@ -63,6 +63,6 @@ mod tests {
     #[test]
     fn all_lists_every_supported_asset_once() {
         let tickers: Vec<&str> = crate::tokens::ALL.iter().map(|info| info.ticker).collect();
-        assert_eq!(tickers, vec!["CBTC", "BETH"]);
+        assert_eq!(tickers, vec!["CBTC", "BETH", "CHYPE"]);
     }
 }

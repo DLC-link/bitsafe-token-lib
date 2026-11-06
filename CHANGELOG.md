@@ -6,6 +6,23 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `tokens::chype`: CHYPE, HYPE bridged from HyperEVM, with the BETH API
+  shape. It holds the registrar and the bridge of each network, the account,
+  mint and burn flows, and the credential filters. Devnet and testnet use
+  HyperEVM testnet (chain 998); mainnet uses HyperEVM (chain 999).
+- CHYPE refuses a withdraw destination that is a HyperEVM system address,
+  because the attestors never pay HYPE to one.
+- The `chype` 0.1.0 DAR in `dars/chype/`, and `dars/upload_dars.sh chype`.
+- The `chype_credentials`, `chype_mint_flow` and `chype_redeem_flow`
+  examples, and `chype` as an `ASSET` value of the Token Standard examples.
+
+### Changed
+
+- The localnet suite uses the sandbox image `cbtc-6689a6a`, which holds the
+  CHYPE packages, and runs a CHYPE phase.
+
 ## [0.3.0] - 2026-10-21
 
 ### Fixed
