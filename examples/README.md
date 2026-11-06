@@ -207,9 +207,19 @@ cargo run --example chype_redeem_flow
 ```
 
 `chype_mint_flow` sends nothing. You sign and send the printed transaction
-with your own HyperEVM wallet on the printed chain. The BitSafe API does not
-serve the CHYPE routes yet. Until it does, `chype_mint_flow` works only with
-an existing deposit account, and `chype_redeem_flow` cannot burn.
+with your own HyperEVM wallet on the printed chain. The amount checks are
+the BETH checks: a whole multiple of 100000000 wei, above zero and inside the
+deposit account's own limits. The mainnet bridge takes deposits and pays out
+withdrawals from 0.25 HYPE. The library does not read the bridge's live
+`depositLimits()`, `withdrawLimits()` or `paused()`; check them with your
+HyperEVM provider first.
+
+`chype_redeem_flow` refuses a destination that never gets a payout: the zero
+address, a HyperEVM system address or a CHYPE bridge proxy.
+
+The BitSafe API does not serve the CHYPE routes yet. Until it does,
+`chype_mint_flow` works only with an existing deposit account, and
+`chype_redeem_flow` cannot burn.
 
 ### Check Balance
 

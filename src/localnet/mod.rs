@@ -1,6 +1,6 @@
 //! The localnet integration suite. It checks each asset's DAR set, then runs
-//! the CBTC, the BETH and then the CHYPE flows against canton's published sandbox image,
-//! with one fresh plain test registrar per run. Start the sandbox with
+//! the CBTC, the BETH and then the CHYPE flows against canton's published
+//! sandbox image, with one fresh plain test registrar per run. Start the sandbox with
 //! `docker compose -f localnet/docker-compose.yml up -d --wait`, then run
 //! `cargo test --lib localnet -- --ignored --nocapture --test-threads=1`.
 
