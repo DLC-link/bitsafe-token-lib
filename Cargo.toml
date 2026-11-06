@@ -20,6 +20,7 @@ uninlined_format_args = "allow"
 [dependencies]
 alloy-primitives = { version = "1.7.3" }
 alloy-sol-types = { version = "1.7.3" }
+bitcoin = { version = "0.32.102" }
 common = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.12.0" }
 ledger = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.12.0" }
 registry = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.12.0" }

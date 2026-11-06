@@ -6,6 +6,22 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Security
+
+- `cbtc::mint::get_bitcoin_address` no longer trusts the BitSafe API for the
+  deposit address. It derives the address locally from the attestor group key
+  that the crate pins for each network, and fails when the API returns a
+  different one. `get_deposit_account_status` gets the same check. A
+  compromised API, or a hijacked API domain, can no longer hand out an
+  address that the attestors do not control.
+
+### Changed
+
+- A new attestor key (a new DKG) needs a new release of this crate. Until
+  then, `get_bitcoin_address` fails with a mismatch error instead of
+  returning an address.
+- The crate depends on `bitcoin` 0.32 for the address derivation.
+
 ## [0.3.0] - 2026-10-21
 
 ### Fixed

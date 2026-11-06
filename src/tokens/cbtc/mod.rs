@@ -135,6 +135,8 @@ impl CantonBridgeV1 for Cbtc {
 
 crate::flows::canton_bridge_v1::bind::bind_canton_bridge_v1!(Cbtc);
 
+mod deposit_address;
+
 pub use family::{minter_credential_cids, minter_credential_offers};
 
 /// Minting CBTC: deposit accounts and their Bitcoin addresses.
@@ -142,7 +144,7 @@ pub mod mint {
     use serde::Deserialize;
 
     pub use super::family::mint::*;
-    use super::registrar;
+    use super::{deposit_address, registrar};
     use crate::{Network, flows::canton_bridge_v1::check_registrar, kits::bitsafe_api};
 
     #[derive(Deserialize)]
@@ -163,13 +165,18 @@ pub mod mint {
     }
 
     /// Asks the BitSafe API for the Bitcoin address the attestors derive for
-    /// this account.
+    /// this account, and checks it against a local derivation from the
+    /// attestor group key that this release pins.
     ///
     /// # Errors
     ///
     /// Fails before any request when the account belongs to another network.
     /// The attestors derive an address for any id, so BTC sent to an address
     /// for the wrong network is never credited.
+    ///
+    /// Fails when the API address differs from the local one. The API may be
+    /// compromised, or the attestors may use a key that this release does not
+    /// pin. Do not send BTC to either address.
     pub async fn get_bitcoin_address(
         network: Network,
         account: &DepositAccount,
@@ -180,7 +187,7 @@ pub mod mint {
             &format!("cbtc/v1/bitcoin-address/{}", account.account_id()),
         )
         .await?;
-        Ok(response.bitcoin_address)
+        deposit_address::verify(network, account.account_id(), &response.bitcoin_address)
     }
 
     /// Finds a deposit account by contract id and adds its Bitcoin address.
