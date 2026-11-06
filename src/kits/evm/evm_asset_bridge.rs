@@ -36,8 +36,9 @@ sol! {
     }
 }
 
-/// Every ETH deposit is a whole multiple of this many wei: the bridge's
-/// `depositUnit()`, 10^(18 - 10) for 18 ETH decimals and 10 Daml decimals.
+/// Every native-coin deposit is a whole multiple of this many wei: the
+/// bridge's `depositUnit()`, 10^(18 - 10) for 18 coin decimals and 10 Daml
+/// decimals.
 pub const DEPOSIT_UNIT_WEI: U256 = U256::from_limbs([100_000_000, 0, 0, 0]);
 
 /// The topic0 of the bridge's `Deposit` event, for a log filter.
@@ -59,8 +60,8 @@ pub fn deposit_id_topic(deposit_id: &str) -> B256 {
     keccak256(deposit_id.as_bytes())
 }
 
-/// Converts wei to the Daml amount the deposit mints: wei / 10^18 ETH,
-/// with 10 decimals.
+/// Converts wei to the Daml amount the deposit mints: wei / 10^18 of the
+/// native coin, ETH or HYPE, with 10 decimals.
 ///
 /// # Errors
 ///
@@ -97,7 +98,7 @@ pub fn wei_to_daml_decimal(wei: U256) -> Result<DamlDecimal, String> {
     Ok(amount)
 }
 
-/// Converts a Daml amount of ETH to wei. Every Daml amount has at most 10
+/// Converts a Daml amount of the native coin, ETH or HYPE, to wei. Every Daml amount has at most 10
 /// decimals, so the result is exact.
 ///
 /// # Errors

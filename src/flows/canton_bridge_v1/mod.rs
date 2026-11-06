@@ -51,6 +51,14 @@ pub trait CantonBridgeV1 {
     /// fails locally with a clear message.
     fn validate_destination(address: &str) -> Result<(), String>;
 
+    /// Checks the destination of an existing withdraw account before a burn.
+    /// Another client may have created the account, so the burn does not
+    /// trust it. The check refuses only a destination that can never get a
+    /// payout, so an older account still burns. The default refuses nothing.
+    fn check_payout_destination(_address: &str) -> Result<(), String> {
+        Ok(())
+    }
+
     /// The fields of a withdraw request that only this asset has. `()` when
     /// the asset has none.
     type WithdrawRequestDetails: std::fmt::Debug + Clone;

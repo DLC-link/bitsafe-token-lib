@@ -134,21 +134,37 @@ impl CantonBridgeV1 for Chype {
     const WITHDRAW_REASON: &'static str = "CHYPE withdrawal";
 
     /// Stricter than the Daml check, which tests the shape only: an address
-    /// with an uppercase hex letter must also match its EIP-55 checksum. The
-    /// zero address and the HyperEVM system addresses are refused, because
-    /// the attestors never pay HYPE to them, and the burn cannot be undone.
+    /// with an uppercase hex letter must also match its EIP-55 checksum, and
+    /// the address must pass `check_payout_destination`.
     fn validate_destination(address: &str) -> Result<(), String> {
         evm::validate_address(address)?;
+        Self::check_payout_destination(address)
+    }
+
+    /// Refuses the zero address, the HyperEVM system addresses and the
+    /// CHYPE bridge proxies. Neither the attestors nor the bridge pay HYPE
+    /// to them, and a burn cannot be undone.
+    fn check_payout_destination(address: &str) -> Result<(), String> {
         let parsed: Address = address
             .parse()
             .map_err(|_| format!("address {address:?} is not 0x and 40 hex digits"))?;
         if parsed.is_zero() {
             return Err("destination address is the zero address".to_string());
         }
-        match hyperevm_system_address(parsed) {
-            Some(reason) => Err(format!("destination address {address} is {reason}")),
-            None => Ok(()),
+        if let Some(reason) = hyperevm_system_address(parsed) {
+            return Err(format!("destination address {address} is {reason}"));
         }
+        // The bridge reverts a payout to itself. A destination is not tied
+        // to one network, so every network's proxy is refused.
+        if let Some(network) = Network::ALL
+            .into_iter()
+            .find(|network| bridge(*network).proxy == parsed)
+        {
+            return Err(format!(
+                "destination address {address} is the CHYPE bridge on {network}"
+            ));
+        }
+        Ok(())
     }
 
     type WithdrawRequestDetails = ();
@@ -197,8 +213,8 @@ pub use family::{minter_credential_cids, minter_credential_offers};
 /// Minting CHYPE: deposit accounts and the `depositETH` call.
 ///
 /// The bridge takes HYPE, HyperEVM's native coin, through the same
-/// `depositETH` function as the BETH bridge. HYPE has 18 decimals, so its
-/// smallest unit is called wei here too.
+/// `depositETH` function as the BETH bridge. HYPE has 18 decimals, so this
+/// crate calls its smallest unit wei too.
 ///
 /// The alloy types re-exported here are the ones the CHYPE signatures use.
 /// `Address` prints as its EIP-55 form, `Bytes` as `0x` hex and `U256` as
@@ -420,6 +436,21 @@ mod tests {
             Chype::validate_destination("0x0000000000000000000000000000000000000000").unwrap_err(),
             "destination address is the zero address"
         );
+    }
+
+    /// The bridge reverts a payout to itself, so no network's proxy is a
+    /// destination, in either spelling.
+    #[test]
+    fn a_chype_bridge_proxy_is_not_a_destination() {
+        for network in Network::ALL {
+            let proxy = bridge(network).proxy.to_string();
+            for address in [proxy.clone(), proxy.to_lowercase()] {
+                assert_eq!(
+                    Chype::validate_destination(&address).unwrap_err(),
+                    format!("destination address {address} is the CHYPE bridge on {network}")
+                );
+            }
+        }
     }
 
     /// The attestors' own test vectors for the system addresses they refuse.
@@ -702,6 +733,45 @@ mod tests {
         assert_eq!(
             error,
             "destination address 0x2222222222222222222222222222222222222222 is the HyperEVM HYPE system address"
+        );
+    }
+
+    /// Another client may create an account with a destination that
+    /// `create_withdraw_account` refuses. The burn checks it again, before
+    /// any request; an HTTP call would fail with a different message.
+    #[tokio::test]
+    async fn submit_withdraw_refuses_an_account_that_pays_a_system_address() {
+        let system = "0x2222222222222222222222222222222222222222";
+        let args = json!({
+            "owner": "alice", "operator": "op", "registrar": registrar(Network::Devnet),
+            "destinationAddress": system, "pendingBalance": "0", "limits": null,
+        });
+        let account =
+            redeem::WithdrawAccount::from_active_contract(&active_contract_of(WA, "00wa", args))
+                .unwrap();
+        let holdings = [token::holding::Holding {
+            contract_id: "00h".to_string(),
+            amount: DamlDecimal::parse("1").unwrap(),
+            instrument_id: instrument(Network::Devnet),
+            owner: "alice".to_string(),
+            account_label: String::new(),
+        }];
+        let params = redeem::SubmitWithdrawParams {
+            ledger_host: "not-a-host".to_string(),
+            party: "alice".to_string(),
+            access_token: "token".to_string(),
+            account: &account,
+            amount: DamlDecimal::parse("0.5").unwrap(),
+            holdings: &holdings,
+            credential_cids: vec!["00cred".to_string()],
+        };
+        let error = match redeem::submit_withdraw(Network::Devnet, params).await {
+            Ok(_) => panic!("a burn to a system address must be refused"),
+            Err(error) => error,
+        };
+        assert_eq!(
+            error,
+            format!("destination address {system} is the HyperEVM HYPE system address")
         );
     }
 

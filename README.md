@@ -205,26 +205,37 @@ check both with your Ethereum provider before you send.
 
 ## Quick start: CHYPE
 
-CHYPE uses the BETH calls under `tokens::chype`. The CHYPE bridge is the
-same contract as the BETH bridge, on HyperEVM. It takes HYPE through the
+CHYPE has the same calls as BETH, under `tokens::chype`. The CHYPE bridge
+is the BETH bridge contract, deployed on HyperEVM. It takes HYPE through the
 same `depositETH` function, so `chype::mint::deposit_call` builds the same
-kind of transaction. HYPE has 18 decimals, so the units are the BETH units:
-wei for the deposit, HYPE as a `DamlDecimal` for the burn.
+kind of transaction.
+
+**Units.** HYPE has 18 decimals, so CHYPE uses the BETH units.
+`deposit_call` takes wei as a `U256`. `redeem::submit_withdraw` takes HYPE
+as a `DamlDecimal`, such as `0.25`.
 
 **Chains.** Devnet and testnet CHYPE run on HyperEVM testnet (chain 998).
 Mainnet CHYPE runs on HyperEVM (chain 999).
 
-**Destinations.** `redeem::create_withdraw_account` refuses the HyperEVM
-system addresses, such as `0x2222…2222` and every address below `0x10000`.
-The attestors never pay HYPE to them, and a burn cannot be undone.
+**Limits.** The mainnet bridge takes deposits and pays out withdrawals from
+0.25 HYPE. The library does not read the bridge's live `depositLimits()`,
+`withdrawLimits()` or `paused()`. Check them with your HyperEVM provider
+before you deposit or burn.
+
+**Destinations.** The library refuses a CHYPE payout address that never
+gets a payout. It refuses the zero address, the HyperEVM system addresses
+and the CHYPE bridge proxies. `redeem::create_withdraw_account` checks the
+address, and `redeem::submit_withdraw` checks it again before the burn.
 
 **BitSafe API.** The BitSafe API does not serve the CHYPE routes yet. Until
-it does, `get_account_contract_rules` and `redeem::submit_withdraw` fail for
-CHYPE. The calls that read only the ledger work.
+it does, a party cannot open a CHYPE account or burn CHYPE.
+`get_account_contract_rules` fails with a parse error, because the API
+redirects the request. `submit_withdraw` fails in the same way. The calls
+that only list contracts on the ledger work.
 
 ## Hold and send
 
-The re-exported `TokenClient` reads balances and sends either asset. The
+The re-exported `TokenClient` reads balances and sends every asset. The
 asset module gives it the right configuration for each network:
 
 ```rust

@@ -10,8 +10,9 @@ or burn (redeem) an asset.
 | `beth/` | The `beth` 0.2.0 DAR |
 | `chype/` | The `chype` 0.1.0 DAR |
 
-The asset DARs are the released `cbtc`, `beth` and `chype` packages. The dependency
-DARs are the Splice and Canton Network Utility packages that they use.
+The asset DARs are the released `cbtc`, `beth` and `chype` packages. The
+dependency DARs are the Splice and Canton Network Utility packages that they
+use.
 
 Each asset DAR has this main package id and this SHA-256 checksum:
 
