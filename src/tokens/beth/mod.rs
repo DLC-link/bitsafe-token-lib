@@ -204,6 +204,17 @@ pub mod mint {
     /// }
     /// ```
     ///
+    /// A CHYPE account does not compile either, although both bridges take
+    /// the same `depositETH` call:
+    ///
+    /// ```compile_fail
+    /// use bitsafe_token::{Network, tokens::{beth::mint::{self, DepositCall, U256}, chype}};
+    ///
+    /// fn call(account: &chype::mint::DepositAccount) -> Result<DepositCall, String> {
+    ///     mint::deposit_call(Network::Devnet, account, U256::from(10_000_000_000_000_000_u64))
+    /// }
+    /// ```
+    ///
     /// # Errors
     ///
     /// Fails, in this order, when the account belongs to another network,
