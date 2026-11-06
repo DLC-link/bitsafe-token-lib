@@ -1,5 +1,5 @@
-//! The first flow family: the account, mint and burn flows that CBTC and
-//! BETH share, written once over the kits.
+//! The first flow family: the account, mint and burn flows that CBTC,
+//! BETH and CHYPE share, written once over the kits.
 //!
 //! The asset is a type parameter. [`CantonBridgeV1`] names every Daml string
 //! that differs between the asset packages. A generic flow never takes a
@@ -15,6 +15,7 @@ use crate::kits::canton;
 pub(crate) mod bind;
 pub(crate) mod credentials;
 pub(crate) mod deposit;
+pub(crate) mod evm_mint;
 pub(crate) mod models;
 pub(crate) mod withdraw;
 
@@ -29,7 +30,7 @@ mod live_api;
 /// inherent method on that asset's concrete model.
 pub trait CantonBridgeV1 {
     const TICKER: &'static str;
-    /// The asset's path segment in the BitSafe API: `cbtc` or `beth`.
+    /// The asset's path segment in the BitSafe API: `cbtc`, `beth` or `chype`.
     const API_PATH: &'static str;
     const DEPOSIT_ACCOUNT: &'static str;
     const DEPOSIT_ACCOUNT_RULES: &'static str;
