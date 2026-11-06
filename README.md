@@ -104,6 +104,8 @@ async fn main() -> Result<(), String> {
         credential_cids: credential_cids.clone(),
     })
     .await?;
+    // The lib checks the API's address against a local derivation from the
+    // attestor key it pins, and fails on a mismatch.
     let btc_address = mint::get_bitcoin_address(network, &account).await?;
     println!("Send BTC to {btc_address}");
 
