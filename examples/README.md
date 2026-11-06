@@ -217,9 +217,9 @@ HyperEVM provider first.
 `chype_redeem_flow` refuses a destination that never gets a payout: the zero
 address, a HyperEVM system address or a CHYPE bridge proxy.
 
-The BitSafe API does not serve the CHYPE routes yet. Until it does,
-`chype_mint_flow` works only with an existing deposit account, and
-`chype_redeem_flow` cannot burn.
+The testnet and mainnet BitSafe APIs do not serve the CHYPE routes yet. On
+those networks, `chype_mint_flow` works only with an existing deposit
+account, and `chype_redeem_flow` cannot burn.
 
 ### Check Balance
 

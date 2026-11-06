@@ -82,5 +82,5 @@ jobs:
         # network from a list when its deployment serves them.
         env:
           BETH_LIVE_API_SKIP: devnet,testnet
-          CHYPE_LIVE_API_SKIP: devnet,testnet,mainnet
+          CHYPE_LIVE_API_SKIP: testnet,mainnet
         run: cargo test --lib live_api -- --ignored

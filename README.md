@@ -227,9 +227,9 @@ gets a payout. It refuses the zero address, the HyperEVM system addresses
 and the CHYPE bridge proxies. `redeem::create_withdraw_account` checks the
 address, and `redeem::submit_withdraw` checks it again before the burn.
 
-**BitSafe API.** The BitSafe API does not serve the CHYPE routes yet. Until
-it does, a party cannot open a CHYPE account or burn CHYPE.
-`get_account_contract_rules` fails with a parse error, because the API
+**BitSafe API.** The devnet BitSafe API serves the CHYPE routes. The testnet
+and mainnet APIs do not serve them yet. On those networks, a party cannot
+open a CHYPE account or burn CHYPE. `get_account_contract_rules` fails with a parse error, because the API
 redirects the request. `submit_withdraw` fails in the same way. The calls
 that only list contracts on the ledger work.
 
