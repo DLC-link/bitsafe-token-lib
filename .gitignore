@@ -14,3 +14,5 @@
 
 # macOS
 .DS_Store
+# Claude Code local permission rules can contain approved secrets
+**/.claude/settings.local.json
