@@ -198,8 +198,8 @@ async fn mint_beth(
   the same as CBTC takes BTC.
 - `beth::mint::wei_to_daml_decimal` and `daml_decimal_to_wei` convert.
 
-**Chains.** Devnet and testnet BETH run on Sepolia (chain 11155111), so you
-need Sepolia ETH. Mainnet BETH runs on Ethereum mainnet (chain 1). The
+**Chains.** The library maps BETH Devnet and Testnet to Sepolia (chain
+11155111), and Mainnet to Ethereum mainnet (chain 1). The
 library does not read the bridge's live `depositLimits()` or `paused()`;
 check both with your Ethereum provider before you send.
 
@@ -214,8 +214,8 @@ kind of transaction.
 `deposit_call` takes wei as a `U256`. `redeem::submit_withdraw` takes HYPE
 as a `DamlDecimal`, such as `0.25`.
 
-**Chains.** Devnet and testnet CHYPE run on HyperEVM testnet (chain 998).
-Mainnet CHYPE runs on HyperEVM (chain 999).
+**Chains.** The library maps CHYPE Devnet and Testnet to HyperEVM testnet
+(chain 998), and Mainnet to HyperEVM mainnet (chain 999).
 
 **Limits.** The library does not read the bridge's live `depositLimits()`,
 `withdrawLimits()` or `paused()`. Check them with your HyperEVM provider
