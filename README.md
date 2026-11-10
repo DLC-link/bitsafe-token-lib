@@ -6,7 +6,7 @@ The library also re-exports the Canton Token Standard operations of
 [canton-lib](https://github.com/DLC-link/canton-lib), so you can hold, send
 and receive every asset.
 
-**Status: 0.4.0.** The API can change in any 0.x release. The crate is not on
+**Status: 0.4.1.** The API can change in any 0.x release. The crate is not on
 crates.io; you add it as a git dependency. It needs Rust 1.94 or newer
 (edition 2024).
 
@@ -16,7 +16,7 @@ Add the crate to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-bitsafe-token = { git = "https://github.com/DLC-link/bitsafe-token-lib", tag = "v0.4.0" }
+bitsafe-token = { git = "https://github.com/DLC-link/bitsafe-token-lib", tag = "v0.4.1" }
 # Login. Or use your own OpenID Connect client and pass its access token.
 keycloak = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.12.0" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
@@ -198,8 +198,8 @@ async fn mint_beth(
   the same as CBTC takes BTC.
 - `beth::mint::wei_to_daml_decimal` and `daml_decimal_to_wei` convert.
 
-**Chains.** Devnet and testnet BETH run on Sepolia (chain 11155111), so you
-need Sepolia ETH. Mainnet BETH runs on Ethereum mainnet (chain 1). The
+**Chains.** The library maps BETH Devnet and Testnet to Sepolia (chain
+11155111), and Mainnet to Ethereum mainnet (chain 1). The
 library does not read the bridge's live `depositLimits()` or `paused()`;
 check both with your Ethereum provider before you send.
 
@@ -214,11 +214,10 @@ kind of transaction.
 `deposit_call` takes wei as a `U256`. `redeem::submit_withdraw` takes HYPE
 as a `DamlDecimal`, such as `0.25`.
 
-**Chains.** Devnet and testnet CHYPE run on HyperEVM testnet (chain 998).
-Mainnet CHYPE runs on HyperEVM (chain 999).
+**Chains.** The library maps CHYPE Devnet and Testnet to HyperEVM testnet
+(chain 998), and Mainnet to HyperEVM mainnet (chain 999).
 
-**Limits.** The mainnet bridge takes deposits and pays out withdrawals from
-0.25 HYPE. The library does not read the bridge's live `depositLimits()`,
+**Limits.** The library does not read the bridge's live `depositLimits()`,
 `withdrawLimits()` or `paused()`. Check them with your HyperEVM provider
 before you deposit or burn.
 
@@ -226,14 +225,6 @@ before you deposit or burn.
 gets a payout. It refuses the zero address, the HyperEVM system addresses
 and the CHYPE bridge proxies. `redeem::create_withdraw_account` checks the
 address, and `redeem::submit_withdraw` checks it again before the burn.
-
-**BitSafe API.** The devnet BitSafe API serves the CHYPE routes. The testnet
-API redirects CHYPE requests to Swagger, so account creation and burns fail.
-The mainnet API serves the routes but returns null deposit and withdrawal
-account rules, so new account creation fails. Its token-standard contracts
-endpoint returns contracts for burns through existing withdrawal accounts.
-Live transaction tests cover devnet only. Calls that only list contracts on
-the ledger work independently of the BitSafe API.
 
 ## Hold and send
 

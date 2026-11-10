@@ -1,5 +1,17 @@
 # Agent notes for bitsafe-token-lib
 
+## Keep documentation independent of deployment state
+
+README files and public docs describe general behavior, release-specific
+APIs, configuration, and prerequisites. They must not record current
+deployment state, temporary network availability, endpoint failures,
+missing deployed contracts, or live limits that operators can change.
+
+Document how a reader checks these conditions at runtime instead of
+recording a snapshot. Keep operational observations in test reports or
+release verification records. A deployment change must not require a new
+library release to correct its README.
+
 ## After a release: update the docs of every supported asset
 
 A release of this crate is not finished until the public docs describe it.

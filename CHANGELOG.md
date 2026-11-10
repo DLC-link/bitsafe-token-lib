@@ -6,6 +6,15 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-11-10
+
+### Documentation
+
+- README files describe library behavior without temporary deployment
+  status or mutable bridge limits.
+- `AGENTS.md` requires general documentation and keeps deployment
+  observations in separate verification records.
+
 ## [0.4.0] - 2026-11-10
 
 ### Added
