@@ -217,9 +217,11 @@ HyperEVM provider first.
 `chype_redeem_flow` refuses a destination that never gets a payout: the zero
 address, a HyperEVM system address or a CHYPE bridge proxy.
 
-The testnet and mainnet BitSafe APIs do not serve the CHYPE routes yet. On
-those networks, `chype_mint_flow` works only with an existing deposit
-account, and `chype_redeem_flow` cannot burn.
+The testnet API redirects CHYPE requests to Swagger, so `chype_redeem_flow`
+cannot burn. The mainnet API returns null account rules. Both networks
+require an existing deposit account for `chype_mint_flow`. Mainnet also
+requires an existing withdrawal account for `chype_redeem_flow`. Live
+transaction tests cover devnet only.
 
 ### Check Balance
 

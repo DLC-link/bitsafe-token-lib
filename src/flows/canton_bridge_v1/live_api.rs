@@ -116,8 +116,8 @@ async fn chype_mainnet() {
 }
 
 /// Runs the checks of an asset unless CI lists the network in `skip_var`,
-/// a comma-separated list of the networks whose BitSafe API does not serve
-/// the asset's routes yet.
+/// a comma-separated list of networks whose BitSafe API does not return
+/// all contracts the checks require yet.
 async fn check_unless_skipped<A: CantonBridgeV1>(network: Network, skip_var: &str) {
     let skipped = std::env::var(skip_var).unwrap_or_default();
     if skipped

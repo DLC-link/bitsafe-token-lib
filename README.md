@@ -228,10 +228,12 @@ and the CHYPE bridge proxies. `redeem::create_withdraw_account` checks the
 address, and `redeem::submit_withdraw` checks it again before the burn.
 
 **BitSafe API.** The devnet BitSafe API serves the CHYPE routes. The testnet
-and mainnet APIs do not serve them yet. On those networks, a party cannot
-open a CHYPE account or burn CHYPE. `get_account_contract_rules` fails with a parse error, because the API
-redirects the request. `submit_withdraw` fails in the same way. The calls
-that only list contracts on the ledger work.
+API redirects CHYPE requests to Swagger, so account creation and burns fail.
+The mainnet API serves the routes but returns null deposit and withdrawal
+account rules, so new account creation fails. Its token-standard contracts
+endpoint returns contracts for burns through existing withdrawal accounts.
+Live transaction tests cover devnet only. Calls that only list contracts on
+the ledger work independently of the BitSafe API.
 
 ## Hold and send
 

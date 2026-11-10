@@ -16,8 +16,9 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   address, a HyperEVM system address or a CHYPE bridge proxy.
   `create_withdraw_account` checks the address, and `submit_withdraw` checks
   the account's address again before the burn.
-- The testnet and mainnet BitSafe APIs do not serve the CHYPE routes yet. On
-  those networks, a party cannot open a CHYPE account or burn CHYPE.
+- The testnet BitSafe API redirects CHYPE requests to Swagger, so account
+  creation and burns fail. The mainnet API returns null account rules, so
+  new account creation fails. Live transaction tests cover devnet only.
 - The `chype` 0.1.0 DAR in `dars/chype/`, and `dars/upload_dars.sh chype`.
 - The `chype_credentials`, `chype_mint_flow` and `chype_redeem_flow`
   examples, and `chype` as an `ASSET` value of the Token Standard examples.

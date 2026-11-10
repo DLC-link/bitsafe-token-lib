@@ -78,9 +78,10 @@ jobs:
         run: rustup show
       - uses: Swatinem/rust-cache@v2
       - name: Check the deployed BitSafe API shapes
-        # The listed networks do not serve the asset's routes yet. Remove a
-        # network from a list when its deployment serves them.
+        # The listed networks do not return all required contracts yet.
+        # Remove a network when its live API check passes without the skip.
         env:
           BETH_LIVE_API_SKIP: devnet,testnet
+          # Testnet redirects to Swagger; mainnet returns null account rules.
           CHYPE_LIVE_API_SKIP: testnet,mainnet
         run: cargo test --lib live_api -- --ignored
