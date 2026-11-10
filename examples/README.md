@@ -209,19 +209,12 @@ cargo run --example chype_redeem_flow
 `chype_mint_flow` sends nothing. You sign and send the printed transaction
 with your own HyperEVM wallet on the printed chain. The amount checks are
 the BETH checks: a whole multiple of 100000000 wei, above zero and inside the
-deposit account's own limits. The mainnet bridge takes deposits and pays out
-withdrawals from 0.25 HYPE. The library does not read the bridge's live
+deposit account's own limits. The library does not read the bridge's live
 `depositLimits()`, `withdrawLimits()` or `paused()`; check them with your
 HyperEVM provider first.
 
 `chype_redeem_flow` refuses a destination that never gets a payout: the zero
 address, a HyperEVM system address or a CHYPE bridge proxy.
-
-The testnet API redirects CHYPE requests to Swagger, so `chype_redeem_flow`
-cannot burn. The mainnet API returns null account rules. Both networks
-require an existing deposit account for `chype_mint_flow`. Mainnet also
-requires an existing withdrawal account for `chype_redeem_flow`. Live
-transaction tests cover devnet only.
 
 ### Check Balance
 

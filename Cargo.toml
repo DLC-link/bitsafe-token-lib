@@ -1,6 +1,6 @@
 [package]
 name = "bitsafe-token"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2024"
 description = "Client library for BitSafe bridged assets on Canton: CBTC, BETH, CHYPE"
 license = "MIT"
