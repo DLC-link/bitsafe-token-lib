@@ -162,49 +162,15 @@ pub use family::{minter_credential_cids, minter_credential_offers};
 /// a decimal number, so a caller without alloy can print every value.
 pub mod mint {
     use super::{BethNetworkConfig, config};
-    use crate::{
-        Network, flows::canton_bridge_v1::check_registrar,
-        kits::evm::evm_asset_bridge::encode_deposit_eth,
-    };
+    use crate::{Network, flows::canton_bridge_v1::evm_mint};
 
     pub use super::family::mint::*;
+    pub use crate::flows::canton_bridge_v1::evm_mint::{DepositCall, DepositTarget};
     pub use crate::kits::evm::evm_asset_bridge::{
         DEPOSIT_EVENT_TOPIC, DEPOSIT_UNIT_WEI, Deposit, daml_decimal_to_wei, deposit_id_topic,
         wei_to_daml_decimal,
     };
     pub use alloy_primitives::{Address, B256, Bytes, U256};
-
-    /// The fields of a `depositETH` transaction. The caller signs and sends
-    /// it with its own Ethereum wallet; this crate sends nothing.
-    #[derive(Debug, Clone, PartialEq, Eq)]
-    pub struct DepositCall {
-        /// The chain to send on: 1 for Ethereum mainnet, 11155111 for Sepolia.
-        pub chain_id: u64,
-        /// The BETH bridge proxy on that chain.
-        pub to: Address,
-        /// The ETH to deposit, in wei: the amount the caller passed.
-        pub value: U256,
-        /// `depositETH(bytes)` with the UTF-8 bytes of the account id.
-        pub data: Bytes,
-        /// The account id that `data` carries, for the caller's records.
-        pub deposit_id: String,
-    }
-
-    /// Where a deposit for an account goes, for a front end that builds the
-    /// transaction itself.
-    #[derive(Debug, Clone, PartialEq, Eq)]
-    pub struct DepositTarget {
-        /// The chain to send on: 1 for Ethereum mainnet, 11155111 for Sepolia.
-        pub chain_id: u64,
-        /// The BETH bridge proxy on that chain.
-        pub to: Address,
-        /// The account id that the attestors match a deposit on.
-        pub deposit_id: String,
-        /// The `depositETH` argument: the UTF-8 bytes of `deposit_id`.
-        pub deposit_id_bytes: Bytes,
-        /// Every deposit must be a whole multiple of this many wei.
-        pub deposit_unit_wei: U256,
-    }
 
     /// Builds the `depositETH(bytes)` transaction that mints BETH to the
     /// account. The function does no I/O, so a front end can call it on
@@ -238,6 +204,17 @@ pub mod mint {
     /// }
     /// ```
     ///
+    /// A CHYPE account does not compile either, although both bridges take
+    /// the same `depositETH` call:
+    ///
+    /// ```compile_fail
+    /// use bitsafe_token::{Network, tokens::{beth::mint::{self, DepositCall, U256}, chype}};
+    ///
+    /// fn call(account: &chype::mint::DepositAccount) -> Result<DepositCall, String> {
+    ///     mint::deposit_call(Network::Devnet, account, U256::from(10_000_000_000_000_000_u64))
+    /// }
+    /// ```
+    ///
     /// # Errors
     ///
     /// Fails, in this order, when the account belongs to another network,
@@ -260,18 +237,12 @@ pub mod mint {
         account: &DepositAccount,
         amount_wei: U256,
     ) -> Result<DepositCall, String> {
-        let target = deposit_target_for(network_config, account)?;
-        if amount_wei.is_zero() {
-            return Err("Deposit amount must be greater than 0".to_string());
-        }
-        account.check_amount(wei_to_daml_decimal(amount_wei)?)?;
-        Ok(DepositCall {
-            chain_id: target.chain_id,
-            to: target.to,
-            value: amount_wei,
-            data: encode_deposit_eth(&target.deposit_id),
-            deposit_id: target.deposit_id,
-        })
+        evm_mint::deposit_call(
+            network_config.registrar,
+            network_config.bridge,
+            account,
+            amount_wei,
+        )
     }
 
     /// The chain, the proxy and the deposit id of the account, for a front
@@ -285,27 +256,8 @@ pub mod mint {
         network: Network,
         account: &DepositAccount,
     ) -> Result<DepositTarget, String> {
-        deposit_target_for(config(network), account)
-    }
-
-    /// The body of `deposit_target`, for a registrar outside the three
-    /// networks.
-    pub(crate) fn deposit_target_for(
-        network_config: &BethNetworkConfig,
-        account: &DepositAccount,
-    ) -> Result<DepositTarget, String> {
-        check_registrar(&account.registrar, network_config.registrar)?;
-        let deposit_id = account.account_id();
-        if deposit_id.is_empty() {
-            return Err("empty deposit id".to_string());
-        }
-        Ok(DepositTarget {
-            chain_id: network_config.bridge.chain_id,
-            to: network_config.bridge.proxy,
-            deposit_id: deposit_id.to_string(),
-            deposit_id_bytes: Bytes::copy_from_slice(deposit_id.as_bytes()),
-            deposit_unit_wei: DEPOSIT_UNIT_WEI,
-        })
+        let network_config = config(network);
+        evm_mint::deposit_target(network_config.registrar, network_config.bridge, account)
     }
 }
 

@@ -1,11 +1,12 @@
 //! The localnet integration suite. It checks each asset's DAR set, then runs
-//! the CBTC and then the BETH flows against canton's published sandbox image,
-//! with one fresh plain test registrar per run. Start the sandbox with
+//! the CBTC, the BETH and then the CHYPE flows against canton's published
+//! sandbox image, with one fresh plain test registrar per run. Start the sandbox with
 //! `docker compose -f localnet/docker-compose.yml up -d --wait`, then run
 //! `cargo test --lib localnet -- --ignored --nocapture --test-threads=1`.
 
 mod beth;
 mod cbtc;
+mod chype;
 mod fixture;
 mod governance;
 mod ledger;
@@ -53,6 +54,7 @@ async fn localnet_suite() {
 
     cbtc::run(&fixture).await;
     beth::run(&fixture).await;
+    chype::run(&fixture).await;
 
     // One registrar service configured one instrument per asset.
     let instrument_configs = fixture
@@ -60,5 +62,5 @@ async fn localnet_suite() {
         .active(&fixture.registrar, INSTRUMENT_CONFIGURATION)
         .await
         .expect("instrument configurations");
-    assert_eq!(instrument_configs.len(), 2);
+    assert_eq!(instrument_configs.len(), 3);
 }

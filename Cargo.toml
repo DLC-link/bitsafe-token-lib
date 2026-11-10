@@ -2,7 +2,7 @@
 name = "bitsafe-token"
 version = "0.3.0"
 edition = "2024"
-description = "Client library for BitSafe bridged assets on Canton: CBTC, BETH"
+description = "Client library for BitSafe bridged assets on Canton: CBTC, BETH, CHYPE"
 license = "MIT"
 repository = "https://github.com/DLC-link/bitsafe-token-lib"
 publish = false
@@ -157,6 +157,18 @@ path = "examples/beth/mint_flow.rs"
 [[example]]
 name = "beth_redeem_flow"
 path = "examples/beth/redeem_flow.rs"
+
+[[example]]
+name = "chype_credentials"
+path = "examples/chype/credentials.rs"
+
+[[example]]
+name = "chype_mint_flow"
+path = "examples/chype/mint_flow.rs"
+
+[[example]]
+name = "chype_redeem_flow"
+path = "examples/chype/redeem_flow.rs"
 
 [profile.release]
 opt-level = 3

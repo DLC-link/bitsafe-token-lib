@@ -8,9 +8,11 @@ or burn (redeem) an asset.
 | `dependencies/` | The Splice and Canton Network Utility DARs that every asset uses |
 | `cbtc/` | The `cbtc` DARs from 1.0.0 to 1.2.1 |
 | `beth/` | The `beth` 0.2.0 DAR |
+| `chype/` | The `chype` 0.1.0 DAR |
 
-The asset DARs are the released `cbtc` and `beth` packages. The dependency
-DARs are the Splice and Canton Network Utility packages that they use.
+The asset DARs are the released `cbtc`, `beth` and `chype` packages. The
+dependency DARs are the Splice and Canton Network Utility packages that they
+use.
 
 Each asset DAR has this main package id and this SHA-256 checksum:
 
@@ -22,6 +24,7 @@ Each asset DAR has this main package id and this SHA-256 checksum:
 | `cbtc-1.2.0.dar` | `f240dd5d1a98079f37c0f93272cf5b28d4523027c42d0003c4c7a530eed6c313` | `4519ada05678f13cd10c3953b07e625a3f36e4fac186f8cf80e6b095a3c3a82d` |
 | `cbtc-1.2.1.dar` | `3484f3214004982cc14315f7835d8722af9b141aebfc3ddcc605b2bee338f1bd` | `b6f82dcf721e94fb1b0d930dc6707ee15a7a6f82e88b4cbb1abc9a40ce2a7a76` |
 | `beth-0.2.0.dar` | `99a39f943ce8fcb39159f8ed4fabab8c71da14db932347cddcf88bf0ac6e521f` | `f61e84e38a51e54855b20210d20acb32b1b566fb30a5a92ac4d163323d079c9c` |
+| `chype-0.1.0.dar` | `601dd547300817b9532108638b2cd22190f3a0216996393705d2b97edcc3dfe3` | `b333300ab951dbbddba54690747a98e3daa351e5ce6acb5c90b902bab6e11aec` |
 
 The utility DARs come from Digital Asset. The file
 `dependencies/Terms.and.Conditions.for.Canton.Network.Utility.txt` sets the
@@ -37,6 +40,7 @@ participant. `ASSET` names the asset, and
 ```bash
 ASSET=cbtc cargo run --example check_dars
 ASSET=beth cargo run --example check_dars
+ASSET=chype cargo run --example check_dars
 ```
 
 A library caller does the same with `bitsafe_token::check_dars`. Its `root`
@@ -60,6 +64,7 @@ export jwt_token="<participant admin token>"           # optional
 export canton_admin_api_url="localhost:5002"           # optional
 dars/upload_dars.sh cbtc
 dars/upload_dars.sh beth
+dars/upload_dars.sh chype
 ```
 
 The script stops at the first DAR that fails to upload. Canton skips a DAR

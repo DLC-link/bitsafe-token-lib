@@ -10,7 +10,7 @@
 /// - KEYCLOAK_HOST, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID
 /// - KEYCLOAK_USERNAME, KEYCLOAK_PASSWORD
 /// - LEDGER_HOST
-/// - ASSET (cbtc or beth)
+/// - ASSET (cbtc, beth or chype)
 use std::env;
 use std::path::Path;
 use std::process;

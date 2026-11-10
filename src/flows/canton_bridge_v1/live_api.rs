@@ -10,7 +10,7 @@ use crate::{
         bitsafe_api::{self, TokenStandardContracts},
         canton::template_suffix,
     },
-    tokens::{beth::Beth, cbtc::Cbtc},
+    tokens::{beth::Beth, cbtc::Cbtc, chype::Chype},
 };
 
 async fn check_asset<A: CantonBridgeV1>(network: Network) {
@@ -82,32 +82,50 @@ async fn cbtc_mainnet() {
 #[tokio::test]
 #[ignore = "calls the deployed BitSafe API; run with --ignored"]
 async fn beth_devnet() {
-    check_beth(Network::Devnet).await;
+    check_unless_skipped::<Beth>(Network::Devnet, "BETH_LIVE_API_SKIP").await;
 }
 
 #[tokio::test]
 #[ignore = "calls the deployed BitSafe API; run with --ignored"]
 async fn beth_testnet() {
-    check_beth(Network::Testnet).await;
+    check_unless_skipped::<Beth>(Network::Testnet, "BETH_LIVE_API_SKIP").await;
 }
 
 #[tokio::test]
 #[ignore = "calls the deployed BitSafe API; run with --ignored"]
 async fn beth_mainnet() {
-    check_beth(Network::Mainnet).await;
+    check_unless_skipped::<Beth>(Network::Mainnet, "BETH_LIVE_API_SKIP").await;
 }
 
-/// Runs the BETH checks unless CI lists the network in
-/// `BETH_LIVE_API_SKIP`, a comma-separated list of the networks whose
-/// BitSafe API does not serve the BETH routes yet.
-async fn check_beth(network: Network) {
-    let skipped = std::env::var("BETH_LIVE_API_SKIP").unwrap_or_default();
+#[tokio::test]
+#[ignore = "calls the deployed BitSafe API; run with --ignored"]
+async fn chype_devnet() {
+    check_unless_skipped::<Chype>(Network::Devnet, "CHYPE_LIVE_API_SKIP").await;
+}
+
+#[tokio::test]
+#[ignore = "calls the deployed BitSafe API; run with --ignored"]
+async fn chype_testnet() {
+    check_unless_skipped::<Chype>(Network::Testnet, "CHYPE_LIVE_API_SKIP").await;
+}
+
+#[tokio::test]
+#[ignore = "calls the deployed BitSafe API; run with --ignored"]
+async fn chype_mainnet() {
+    check_unless_skipped::<Chype>(Network::Mainnet, "CHYPE_LIVE_API_SKIP").await;
+}
+
+/// Runs the checks of an asset unless CI lists the network in `skip_var`,
+/// a comma-separated list of networks whose BitSafe API does not return
+/// all contracts the checks require yet.
+async fn check_unless_skipped<A: CantonBridgeV1>(network: Network, skip_var: &str) {
+    let skipped = std::env::var(skip_var).unwrap_or_default();
     if skipped
         .split(',')
         .any(|name| name.trim() == network.to_string())
     {
-        eprintln!("skipped: BETH_LIVE_API_SKIP lists {network}");
+        eprintln!("skipped: {skip_var} lists {network}");
         return;
     }
-    check_asset::<Beth>(network).await;
+    check_asset::<A>(network).await;
 }

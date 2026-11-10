@@ -144,3 +144,63 @@ fn the_beth_api_compiles_at_its_public_paths() {
     let _ = (DEPOSIT_EVENT_TOPIC, DEPOSIT_UNIT_WEI);
     let _: Option<(DepositCall, DepositTarget, Deposit)> = None;
 }
+
+/// The whole CHYPE API is reachable under `tokens::chype`, with no generic
+/// parameter and no crate-private path. A missing name is a compile error.
+#[test]
+fn the_chype_api_compiles_at_its_public_paths() {
+    use bitsafe_token::tokens::chype::{
+        self, Chype, ChypeNetworkConfig, EvmBridge, INFO, TICKER, bridge, client_config, config,
+        instrument,
+        mint::{
+            AccountContractRuleSet, Address, B256, Bytes, ContractInfo, CreateDepositAccountParams,
+            DEPOSIT_EVENT_TOPIC, DEPOSIT_UNIT_WEI, Deposit, DepositAccount, DepositCall,
+            DepositTarget, Limits, ListDepositAccountsParams, U256, create_deposit_account,
+            daml_decimal_to_wei, deposit_call, deposit_id_topic, deposit_target,
+            find_deposit_account, get_account_contract_rules, list_deposit_accounts,
+            wei_to_daml_decimal,
+        },
+        minter_credential_cids, minter_credential_offers,
+        redeem::{
+            CreateWithdrawAccountParams, ListHoldingsParams, ListWithdrawAccountsParams,
+            ListWithdrawRequestsParams, SubmitWithdrawParams, WithdrawAccount, WithdrawRequest,
+            create_withdraw_account, find_withdraw_account, list_holdings, list_withdraw_accounts,
+            list_withdraw_requests, submit_withdraw,
+        },
+    };
+    let network = bitsafe_token::Network::Devnet;
+    let _: (&ChypeNetworkConfig, EvmBridge, &str) =
+        (config(network), bridge(network), chype::registrar(network));
+    let _ = (Chype, INFO, TICKER, client_config, instrument);
+    let _ = (minter_credential_cids, minter_credential_offers);
+    let _ = (
+        create_deposit_account,
+        find_deposit_account,
+        get_account_contract_rules,
+        list_deposit_accounts,
+    );
+    let _ = (
+        create_withdraw_account,
+        find_withdraw_account,
+        list_holdings,
+    );
+    let _ = (
+        list_withdraw_accounts,
+        list_withdraw_requests,
+        submit_withdraw,
+    );
+    let _: Option<(DepositAccount, AccountContractRuleSet, ContractInfo, Limits)> = None;
+    let _: Option<(ListDepositAccountsParams, CreateDepositAccountParams)> = None;
+    let _: Option<(WithdrawAccount, WithdrawRequest, ListWithdrawAccountsParams)> = None;
+    let _: Option<(
+        CreateWithdrawAccountParams,
+        ListHoldingsParams,
+        ListWithdrawRequestsParams,
+    )> = None;
+    let _: Option<SubmitWithdrawParams<'static>> = None;
+    let _: Option<(Address, B256, Bytes, U256)> = None;
+    let _ = (deposit_call, deposit_target, deposit_id_topic);
+    let _ = (wei_to_daml_decimal, daml_decimal_to_wei);
+    let _ = (DEPOSIT_EVENT_TOPIC, DEPOSIT_UNIT_WEI);
+    let _: Option<(DepositCall, DepositTarget, Deposit)> = None;
+}
