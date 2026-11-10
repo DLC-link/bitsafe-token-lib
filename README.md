@@ -6,7 +6,7 @@ The library also re-exports the Canton Token Standard operations of
 [canton-lib](https://github.com/DLC-link/canton-lib), so you can hold, send
 and receive every asset.
 
-**Status: 0.3.0.** The API can change in any 0.x release. The crate is not on
+**Status: 0.4.0.** The API can change in any 0.x release. The crate is not on
 crates.io; you add it as a git dependency. It needs Rust 1.94 or newer
 (edition 2024).
 
@@ -16,7 +16,7 @@ Add the crate to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-bitsafe-token = { git = "https://github.com/DLC-link/bitsafe-token-lib", tag = "v0.3.0" }
+bitsafe-token = { git = "https://github.com/DLC-link/bitsafe-token-lib", tag = "v0.4.0" }
 # Login. Or use your own OpenID Connect client and pass its access token.
 keycloak = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.12.0" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
