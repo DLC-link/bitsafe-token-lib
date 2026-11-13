@@ -69,9 +69,17 @@ pilot reviews the change requests and decides when they merge.
 
 ## Keep external documentation current
 
-After every change, review and update the following documentation to reflect the change before marking the work complete.
-The PR description must link the documentation updates or explain why the change requires no documentation edit.
-If access is unavailable, report the required update and its document link to the reviewer.
-Preserve each document's approval process and distinguish draft proposals from implemented behavior.
+Before requesting PR review, check whether the completed change affects the external documentation listed below.
+Update documentation when the change makes its descriptions or instructions inaccurate or incomplete.
+This requirement applies to the PR as a whole, not each local edit or commit.
+
+Prepare updates through the documentation's existing review process.
+Link any documentation PRs or proposed updates in the code PR.
+If no update is needed, state why.
+
+Coordinate publication with the release of the behavior being documented.
+Clearly label unreleased behavior.
+If access prevents an update, identify the affected document and the required change in the PR so the reviewer can arrange completion.
+Preserve historical records and distinguish draft proposals from implemented behavior.
 
 - [Integrate BitSafe assets (documentation brief)](https://app.notion.com/p/64b02e7b6a79453c8218f3e14521b9c6?pvs=204)
