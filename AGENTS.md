@@ -66,3 +66,12 @@ pilot reviews the change requests and decides when they merge.
   them to page links before you upload a page.
 - The docs are public. Do not link private repositories, and do not put
   credentials, tokens or party secrets in a page.
+
+## Keep external documentation current
+
+After every change, review and update the following documentation to reflect the change before marking the work complete.
+The PR description must link the documentation updates or explain why the change requires no documentation edit.
+If access is unavailable, report the required update and its document link to the reviewer.
+Preserve each document's approval process and distinguish draft proposals from implemented behavior.
+
+- [Integrate BitSafe assets (documentation brief)](https://app.notion.com/p/64b02e7b6a79453c8218f3e14521b9c6?pvs=204)
