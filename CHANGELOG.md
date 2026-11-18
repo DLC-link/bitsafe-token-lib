@@ -11,6 +11,7 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `Deposit` follows the bridge upgrade from DLC-link/evm-asset-bridge#68.
   The event has a new last field, `prevDepositBlock`. Any code that builds
   or decodes a `Deposit` must handle the new field.
+  Both `tokens::beth::mint` and `tokens::chype::mint` re-export this event.
 - `DEPOSIT_EVENT_TOPIC` now matches only the new event,
   `Deposit(bytes32,bytes,address,uint256,uint256)`. Its value is
   `0xf3ca88974ec5963addc617fe6c0c359d7196759e318be6ab0cade940986e30e2`.
