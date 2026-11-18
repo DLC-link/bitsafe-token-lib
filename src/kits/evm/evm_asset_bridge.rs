@@ -27,11 +27,15 @@ sol! {
     interface BitSafeEvmAssetBridge {
         function depositETH(bytes calldata depositAccountId) external payable;
         function depositERC20(uint256 amount, bytes calldata depositAccountId) external;
+        /// `prevDepositBlock` is the block of the previous deposit for the
+        /// same account. It is 0 when the account has no earlier deposit
+        /// since the deployment, or since the upgrade that added the field.
         event Deposit(
             bytes32 indexed depositAccountIdHash,
             bytes depositAccountId,
             address indexed sender,
-            uint256 amount
+            uint256 amount,
+            uint256 prevDepositBlock
         );
     }
 }
@@ -145,7 +149,7 @@ mod tests {
         );
         assert_eq!(
             DEPOSIT_EVENT_TOPIC.to_string(),
-            "0xacaea730ea841fae3326f72a7ff746b6e06c646840526bcaf5dabee5fd887ef8"
+            "0xf3ca88974ec5963addc617fe6c0c359d7196759e318be6ab0cade940986e30e2"
         );
     }
 
