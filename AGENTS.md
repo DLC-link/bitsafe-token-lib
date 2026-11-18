@@ -20,13 +20,13 @@ Each supported asset has its own docs space at
 are the modules in `src/tokens/` (today `cbtc`, `beth` and `chype`). After
 you cut a release, you and the pilot update the docs of every one of them.
 
-The docs live in GitBook, and docs.bitsafe.finance publishes them. Work on
-them through the GitBook API. The API needs a GitBook access token, which
-the pilot gives you. Keep the token out of the repository, and out of any
-file that git tracks.
+The documentation source lives in a separate repository.
+The pilot identifies that repository and provides access when needed.
+The site publishes the source after a merge to `main`.
+Read the documentation repository's README for its current layout and review process.
 
-Make the docs changes through one GitBook change request for each asset. The
-pilot reviews the change requests and decides when they merge.
+Open a documentation PR that covers every supported asset.
+The pilot reviews the PR and decides when it merges.
 
 ### What to check
 
@@ -56,14 +56,16 @@ pilot reviews the change requests and decides when they merge.
 - Run the read-only examples against devnet with credentials that the pilot
   gives you. Run an example that writes to the ledger only with the pilot's
   approval.
-- After the change requests merge, scan all pages of each asset for old
+- After the documentation PR merges, scan all pages of each asset for old
   version strings, not only the pages that you edited. Then open the
   published pages and confirm the links.
+- Check [the site health endpoint](https://docs.bitsafe.finance/api/health).
+  Its `contentRevision` must identify the documentation commit that includes the merged update.
+  Confirm the released version and migration guidance on the published asset pages.
 
 ### Pitfalls
 
-- GitBook does not resolve relative page links in imported markdown. Convert
-  them to page links before you upload a page.
+- The site supports relative Markdown links. Check their target paths and heading anchors.
 - The docs are public. Do not link private repositories, and do not put
   credentials, tokens or party secrets in a page.
 
