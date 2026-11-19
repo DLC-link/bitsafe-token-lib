@@ -693,11 +693,11 @@ dependencies = [
 
 [[package]]
 name = "canton-api-client"
-version = "3.6.1-0.1.0"
+version = "3.6.1-0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47e17b77ce38ae760c1b8f82f8ae8dc0d2766f16a7092d540dfcf3bf26e21f6c"
+checksum = "6b706dae3e90c4249d05d5f71e7d4eb7dfc1491445019c83a4102a3cd361a694"
 dependencies = [
- "chrono",
+ "jiff 1.0.1",
  "reqwest 0.13.5",
  "serde",
  "serde_json",
@@ -750,10 +750,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1aa79e62e7697b8e29b513a68abacf485adcd1fe8284a4316c5ae868e6633327"
 dependencies = [
  "iana-time-zone",
- "js-sys",
  "num-traits",
  "serde",
- "wasm-bindgen",
  "windows-link",
 ]
 
@@ -785,7 +783,7 @@ dependencies = [
 [[package]]
 name = "common"
 version = "0.12.0"
-source = "git+https://github.com/DLC-link/canton-lib?tag=v0.12.0#77474de5eff31d4ab52489e3c83ccf9001eaced2"
+source = "git+https://github.com/DLC-link/canton-lib?rev=b8e460234f5c65dde52f5e0d5f55c8e23ebc78c7#b8e460234f5c65dde52f5e0d5f55c8e23ebc78c7"
 dependencies = [
  "canton-api-client",
  "rust_decimal",
@@ -2137,7 +2135,7 @@ dependencies = [
 [[package]]
 name = "keycloak"
 version = "0.12.0"
-source = "git+https://github.com/DLC-link/canton-lib?tag=v0.12.0#77474de5eff31d4ab52489e3c83ccf9001eaced2"
+source = "git+https://github.com/DLC-link/canton-lib?rev=b8e460234f5c65dde52f5e0d5f55c8e23ebc78c7#b8e460234f5c65dde52f5e0d5f55c8e23ebc78c7"
 dependencies = [
  "base64 0.22.1",
  "reqwest 0.12.28",
@@ -2163,7 +2161,7 @@ checksum = "a4933f3f57a8e9d9da04db23fb153356ecaf00cbd14aee46279c33dc80925c37"
 [[package]]
 name = "ledger"
 version = "0.12.0"
-source = "git+https://github.com/DLC-link/canton-lib?tag=v0.12.0#77474de5eff31d4ab52489e3c83ccf9001eaced2"
+source = "git+https://github.com/DLC-link/canton-lib?rev=b8e460234f5c65dde52f5e0d5f55c8e23ebc78c7#b8e460234f5c65dde52f5e0d5f55c8e23ebc78c7"
 dependencies = [
  "base64 0.22.1",
  "canton-api-client",
@@ -2801,7 +2799,7 @@ checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 [[package]]
 name = "registry"
 version = "0.12.0"
-source = "git+https://github.com/DLC-link/canton-lib?tag=v0.12.0#77474de5eff31d4ab52489e3c83ccf9001eaced2"
+source = "git+https://github.com/DLC-link/canton-lib?rev=b8e460234f5c65dde52f5e0d5f55c8e23ebc78c7#b8e460234f5c65dde52f5e0d5f55c8e23ebc78c7"
 dependencies = [
  "common",
  "reqwest 0.12.28",
@@ -3665,13 +3663,13 @@ checksum = "fd3ca314f692efd6c868f8408f53fe444634a845f96c028b97d35f6a1f79f0ee"
 [[package]]
 name = "token"
 version = "0.12.0"
-source = "git+https://github.com/DLC-link/canton-lib?tag=v0.12.0#77474de5eff31d4ab52489e3c83ccf9001eaced2"
+source = "git+https://github.com/DLC-link/canton-lib?rev=b8e460234f5c65dde52f5e0d5f55c8e23ebc78c7#b8e460234f5c65dde52f5e0d5f55c8e23ebc78c7"
 dependencies = [
  "base64 0.22.1",
  "canton-api-client",
- "chrono",
  "common",
  "csv",
+ "jiff 1.0.1",
  "keycloak",
  "ledger",
  "log",
