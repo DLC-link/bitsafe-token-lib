@@ -66,7 +66,7 @@ async fn main() -> Result<(), String> {
     // Create log file
     let log_file = format!(
         "stream_results_{}.log",
-        chrono::Utc::now().format("%Y%m%d_%H%M%S")
+        jiff::Timestamp::now().strftime("%Y%m%d_%H%M%S")
     );
     println!("Logging results to: {}", log_file);
 
@@ -85,7 +85,7 @@ async fn main() -> Result<(), String> {
 
                 let log_line = format!(
                     "{} | {} | idx={} | to={} | amount={} | ref={} | offer={} | update_id={} | error={} | raw={}\n",
-                    chrono::Utc::now().to_rfc3339(),
+                    jiff::Timestamp::now(),
                     status,
                     result.transfer_index,
                     result.receiver,
@@ -127,7 +127,7 @@ async fn main() -> Result<(), String> {
         keycloak_username: keycloak_username.clone(),
         keycloak_password: keycloak_password.clone(),
         keycloak_url: keycloak_url.clone(),
-        reference_base: Some(format!("stream-{}", chrono::Utc::now().timestamp())),
+        reference_base: Some(format!("stream-{}", jiff::Timestamp::now().as_second())),
         on_transfer_complete: Some(callback),
     })
     .await?;

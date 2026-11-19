@@ -56,7 +56,7 @@ async fn main() -> Result<(), String> {
 
     let log_file = format!(
         "transfer_results_{}.log",
-        chrono::Utc::now().format("%Y%m%d_%H%M%S")
+        jiff::Timestamp::now().strftime("%Y%m%d_%H%M%S")
     );
     println!("Logging transfer results to: {}", log_file);
 
@@ -66,7 +66,7 @@ async fn main() -> Result<(), String> {
             Box::pin(async move {
                 let line = format!(
                     "[{}] {} {} to {}{}\n",
-                    chrono::Utc::now().to_rfc3339(),
+                    jiff::Timestamp::now(),
                     if result.success { "OK  " } else { "FAIL" },
                     result.amount,
                     result.receiver,
@@ -99,7 +99,7 @@ async fn main() -> Result<(), String> {
             &env::var("KEYCLOAK_HOST").expect("KEYCLOAK_HOST must be set"),
             &env::var("KEYCLOAK_REALM").expect("KEYCLOAK_REALM must be set"),
         ),
-        reference_base: Some(format!("batch-v2-{}", chrono::Utc::now().timestamp())),
+        reference_base: Some(format!("batch-v2-{}", jiff::Timestamp::now().as_second())),
         on_transfer_complete: Some(callback),
     })
     .await?;

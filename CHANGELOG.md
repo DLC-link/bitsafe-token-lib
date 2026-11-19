@@ -6,6 +6,13 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- The examples use `jiff` instead of `chrono`, because RUSTSEC-2026-0543
+  marks `chrono` as unmaintained. The send and allocate examples now write
+  `requestedAt`, `executeBefore` and the allocation deadlines with a `Z`
+  offset, for example `2026-11-19T12:54:31.67331Z`.
+
 ## [0.5.0] - 2026-11-18
 
 ### Changed — breaking
