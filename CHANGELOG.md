@@ -15,7 +15,7 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The crate uses `canton-lib` 0.13.0 instead of 0.12.0. A project that also
   depends on a `canton-lib` crate must pin `v0.13.0`. Two different pins make
   Cargo build two copies of the shared types, and then the types do not
-  match.
+  match. A direct `canton-api-client` dependency must be `3.6.1-0.1.1`.
 
 ### Changed
 
