@@ -18,14 +18,14 @@ Add the crate to your `Cargo.toml`:
 [dependencies]
 bitsafe-token = { git = "https://github.com/DLC-link/bitsafe-token-lib", tag = "v0.5.0" }
 # Login. Or use your own OpenID Connect client and pass its access token.
-keycloak = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.12.0" }
+keycloak = { git = "https://github.com/DLC-link/canton-lib", tag = "v0.13.0" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 ```
 
-If you add other `canton-lib` crates, pin the same tag, `v0.12.0`. Two
+If you add other `canton-lib` crates, pin the same tag, `v0.13.0`. Two
 different pins make Cargo build two copies of the shared types, and then the
 types do not match. A direct `canton-api-client` dependency must be version
-`3.6.1-0.1.0`. With any other version, Cargo cannot resolve the build.
+`3.6.1-0.1.1`. With any other version, Cargo cannot resolve the build.
 
 ## Before you start
 

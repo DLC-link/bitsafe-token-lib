@@ -51,15 +51,15 @@ async fn main() -> Result<(), String> {
 
     // Allocation must be funded before `allocateBefore` and settled before
     // `settleBefore` (which must be later).
-    let now = chrono::Utc::now();
+    let now = jiff::Timestamp::now();
     let allocate_before = now
-        .checked_add_signed(chrono::Duration::hours(24))
+        .checked_add(jiff::SignedDuration::from_hours(24))
         .expect("allocateBefore offset overflowed")
-        .to_rfc3339();
+        .to_string();
     let settle_before = now
-        .checked_add_signed(chrono::Duration::hours(48))
+        .checked_add(jiff::SignedDuration::from_hours(48))
         .expect("settleBefore offset overflowed")
-        .to_rfc3339();
+        .to_string();
 
     println!(
         "\nAllocating {} {} into settlement leg",
@@ -77,7 +77,7 @@ async fn main() -> Result<(), String> {
                 id: settlement_ref_id,
                 cid: None,
             },
-            requested_at: now.to_rfc3339(),
+            requested_at: now.to_string(),
             allocate_before,
             settle_before,
             meta: bitsafe_token::types::allocation::Metadata::default(),
@@ -94,7 +94,7 @@ async fn main() -> Result<(), String> {
 
     let params = bitsafe_token::allocation::Params {
         allocation,
-        requested_at: now.to_rfc3339(),
+        requested_at: now.to_string(),
         input_holding_cids: Vec::new(), // Library auto-selects the sender's holdings
         ledger_host: env::var("LEDGER_HOST").expect("LEDGER_HOST must be set"),
         access_token: auth.access_token,

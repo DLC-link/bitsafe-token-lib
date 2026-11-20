@@ -526,7 +526,7 @@ let result = bitsafe_token::distribute::submit(bitsafe_token::distribute::Params
 use std::fs::OpenOptions;
 use std::io::Write;
 
-let log_file = format!("transfer_results_{}.log", chrono::Utc::now().format("%Y%m%d_%H%M%S"));
+let log_file = format!("transfer_results_{}.log", jiff::Timestamp::now().strftime("%Y%m%d_%H%M%S"));
 
 let callback = Box::new(move |result: bitsafe_token::transfer::TransferResult| -> Pin<Box<dyn Future<Output = ()> + Send>> {
     let log_file = log_file.clone();
@@ -539,7 +539,7 @@ let callback = Box::new(move |result: bitsafe_token::transfer::TransferResult| -
 
         let log_line = format!(
             "{} | {} | idx={} | to={} | amount={} | ref={} | offer={} | update_id={} | error={}\n",
-            chrono::Utc::now().to_rfc3339(),
+            jiff::Timestamp::now(),
             status,
             result.transfer_index,
             result.receiver,

@@ -66,11 +66,11 @@ async fn main() -> Result<(), String> {
             receiver: bitsafe_token::Account::basic(receiver_party),
             amount,
             instrument_id: shared::instrument(shared::asset()),
-            requested_at: chrono::Utc::now().to_rfc3339(),
-            execute_before: chrono::Utc::now()
-                .checked_add_signed(chrono::Duration::hours(168))
+            requested_at: jiff::Timestamp::now().to_string(),
+            execute_before: jiff::Timestamp::now()
+                .checked_add(jiff::SignedDuration::from_hours(168))
                 .unwrap()
-                .to_rfc3339(),
+                .to_string(),
             input_holding_cids: None, // Library will auto-select UTXOs
             meta: None,
         },

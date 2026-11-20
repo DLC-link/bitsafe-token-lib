@@ -55,7 +55,7 @@ async fn main() -> Result<(), String> {
 
     loop {
         poll_count += 1;
-        let timestamp = chrono::Local::now().format("%H:%M:%S");
+        let timestamp = jiff::ZonedDateTime::now().strftime("%H:%M:%S");
         println!("─────────────────────────────────────────────────────");
         println!("[{}] Poll #{}", timestamp, poll_count);
         println!("─────────────────────────────────────────────────────");

@@ -6,6 +6,34 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed — breaking
+
+- `SendParams::execute_before` is now `Option<std::time::Duration>` instead
+  of `Option<chrono::Duration>`. Pass `Duration::from_secs(...)` at the call
+  site. `send` now returns an error when the duration overflows the time
+  range. Before, the addition panicked.
+- The crate uses `canton-lib` 0.13.0 instead of 0.12.0. A project that also
+  depends on a `canton-lib` crate must pin `v0.13.0`. Two different pins make
+  Cargo build two copies of the shared types, and then the types do not
+  match. A direct `canton-api-client` dependency must be `3.6.1-0.1.1`.
+
+### Changed
+
+- `send`, `split`, `consolidate` and `batch` write `requestedAt` and
+  `executeBefore` with a `Z` offset and without trailing zero digits, for
+  example `2026-11-19T12:54:31.67331Z`. Before, they wrote
+  `2026-11-19T12:54:31.673310+00:00`. Both forms name the same instant, and
+  the registry and the Ledger API accept both.
+- The examples use `jiff` instead of `chrono`. The send and allocate
+  examples now write `requestedAt`, `executeBefore` and the allocation
+  deadlines with a `Z` offset.
+
+### Security
+
+- `canton-lib` 0.13.0 and `canton-api-client` 3.6.1-0.1.1 replace `chrono`
+  with `jiff`, and so does this crate. RUSTSEC-2026-0543 marks `chrono` as
+  unmaintained.
+
 ## [0.5.0] - 2026-11-18
 
 ### Changed — breaking

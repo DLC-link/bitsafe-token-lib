@@ -56,7 +56,7 @@ async fn main() -> Result<(), String> {
     // Create log file path
     let log_file = format!(
         "transfer_results_{}.log",
-        chrono::Utc::now().format("%Y%m%d_%H%M%S")
+        jiff::Timestamp::now().strftime("%Y%m%d_%H%M%S")
     );
     println!("Logging transfer results to: {}", log_file);
 
@@ -77,7 +77,7 @@ async fn main() -> Result<(), String> {
 
                 let log_line = format!(
                     "{} | {} | idx={} | to={} | amount={} | ref={} | offer={} | update_id={} | error={}\n",
-                    chrono::Utc::now().to_rfc3339(),
+                    jiff::Timestamp::now(),
                     status,
                     result.transfer_index,
                     result.receiver,
@@ -111,7 +111,7 @@ async fn main() -> Result<(), String> {
         keycloak_username,
         keycloak_password,
         keycloak_url,
-        reference_base: Some(format!("batch-{}", chrono::Utc::now().timestamp())),
+        reference_base: Some(format!("batch-{}", jiff::Timestamp::now().as_second())),
         on_transfer_complete: Some(callback),
     })
     .await?;
