@@ -6,6 +6,8 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-20
+
 ### Changed — breaking
 
 - `SendParams::execute_before` is now `Option<std::time::Duration>` instead
